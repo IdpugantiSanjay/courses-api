@@ -12,3 +12,4 @@
 #### TODO
 - [ ] Implement Vue/Vite frontend with ASP.NET core SPA template
 - [ ] Implement ```dotnet-suggest```
+- [ ] Implement Linting withing IDE and third party tools
