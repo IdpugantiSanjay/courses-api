@@ -10,5 +10,5 @@
 
 
 #### TODO
-[ ] Implement Vue/Vite frontend with ASP.NET core SPA template
-[ ] Implement ```dotnet-suggest```
+- [ ] Implement Vue/Vite frontend with ASP.NET core SPA template
+- [ ] Implement ```dotnet-suggest```
