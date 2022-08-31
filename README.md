@@ -26,9 +26,11 @@ Used Github Actions for CI
 4. Basic ASP.NET Core Integration Test Solution
 5. MediatR
 6. Serilog logging to file and console
+7. Health Checks
 
 
 #### TODO
+- [ ] Implement Health Check UI to see which components are down.
 - [ ] Implement Vue/Vite frontend with ASP.NET core SPA template
 - [ ] Implement ```dotnet-suggest```
 - [ ] Implement Linting withing IDE and third party tools
