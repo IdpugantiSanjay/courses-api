@@ -9,11 +9,14 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+    env:
+      DOCKER_REPOSITORY: isanjay112 # name of Docker Hub ID
+      IMAGE_NAME: courses
+      IMAGE_TAG: ${{ github.run_number }} # $GITHUB_RUN_NUMBER
 
     steps:
     - uses: actions/checkout@v3
     - name: Build the Docker image
-      working-directory: ./Courses.API
-      run: docker build . --file Dockerfile --tag courses:$(date +%s)
+      run: docker build ./Courses.API --file ./Courses.API/Dockerfile --tag $DOCKER_REPOSITORY/$IMAGE_NAME:$GITHUB_RUN_NUMBER
     
     
