@@ -30,7 +30,7 @@ jobs:
           
       - name: Build
         run: |
-          docker build . -f Courses.API/Dockerfile -t $DOCKER_REPOSITORY/$IMAGE_NAME:$GITHUB_RUN_NUMBER
+          docker build . -f Courses.API/Dockerfile -t $DOCKER_REPOSITORY/$IMAGE_NAME:0.0.$GITHUB_RUN_NUMBER
           
       - name: List Images
         run: |
@@ -38,4 +38,4 @@ jobs:
           
       - name: Push
         run: |
-          docker push $DOCKER_REPOSITORY/$IMAGE_NAME:$GITHUB_RUN_NUMBER
+          docker push $DOCKER_REPOSITORY/$IMAGE_NAME:0.0.$GITHUB_RUN_NUMBER
