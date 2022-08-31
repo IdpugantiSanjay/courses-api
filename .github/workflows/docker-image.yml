@@ -23,5 +23,6 @@ jobs:
           
       - name: Build and Push
         run: |
-          docker build . -f Courses.API/Dockerfile -t isanjay112/courses:$GITHUB_RUN_NUMBER # will run buildx
-          docker push isanjay112/courses:$GITHUB_RUN_NUMBER
+          docker build . -f Courses.API/Dockerfile -t isanjay112/courses:latest # will run buildx
+          docker image ls
+          docker push isanjay112/courses:latest
