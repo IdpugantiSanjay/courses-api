@@ -7,6 +7,12 @@ on:
 jobs:
   buildx:
     runs-on: ubuntu-latest
+    
+    env:
+      DOCKER_REPOSITORY: isanjay112 # name of Docker Hub ID
+      IMAGE_NAME: courses
+      IMAGE_TAG: ${{ github.run_number }} # $GITHUB_RUN_NUMBER
+      
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -21,8 +27,10 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
           
-      - name: Build and Push
+      - name: Build
         run: |
-          docker build . -f Courses.API/Dockerfile -t isanjay112/courses:latest # will run buildx
-          docker image ls
-          docker push isanjay112/courses:latest
+          docker build . -f Courses.API/Dockerfile -t $DOCKER_REPOSITORY/$IMAGE_NAME:$GITHUB_RUN_NUMBER # will run buildx
+          
+      - name: Push
+        run: |
+          docker push $DOCKER_REPOSITORY/$IMAGE_NAME:$GITHUB_RUN_NUMBER
