@@ -14,7 +14,7 @@ Used Docker Container to easier CI/CD and deployments.
 Used ElasticSearch APM server and ElasticSearch for logging and distributed tracing.
 
 ![Fedora](https://img.shields.io/badge/Fedora-294172?style=for-the-badge&logo=fedora&logoColor=white) \
-Developed on Fedora Virtual Machine
+Developed on Fedora Operating System
 
 ![GitHub](https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white)\
 Used Github Actions for CI
