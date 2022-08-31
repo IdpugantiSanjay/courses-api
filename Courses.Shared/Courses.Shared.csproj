@@ -7,12 +7,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Reference Include="JetBrains.Annotations">
-            <HintPath>..\..\..\..\.nuget\packages\jetbrains.annotations\2022.1.0\lib\netstandard2.0\JetBrains.Annotations.dll</HintPath>
-        </Reference>
-        <Reference Include="MediatR.Contracts">
-            <HintPath>..\..\..\..\.nuget\packages\mediatr.contracts\1.0.1\lib\netstandard2.0\MediatR.Contracts.dll</HintPath>
-        </Reference>
+        <PackageReference Include="JetBrains.Annotations" Version="2022.1.0"/>
+        <PackageReference Include="MediatR" Version="10.0.1"/>
     </ItemGroup>
 
 </Project>
