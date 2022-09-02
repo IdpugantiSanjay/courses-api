@@ -1,4 +1,3 @@
-using System.CommandLine;
 using System.Net.Http.Json;
 using Courses.Shared;
 using Elastic.Apm;
@@ -20,35 +19,7 @@ internal class IndexCourse
         _logger = logger;
     }
 
-    public async Task Ingest()
-    {
-        var rootCommand = new RootCommand("CLI to Ingest Courses");
-
-        var path = new Argument<DirectoryInfo>(
-            "path",
-            "course path");
-
-        var author = new Option<string>("--author", () => string.Empty);
-        var categories = new Option<string[]>("--categories", Array.Empty<string>);
-        var platform = new Option<string>("--platform", () => string.Empty);
-
-        rootCommand.AddArgument(path);
-        rootCommand.AddOption(author);
-        rootCommand.AddOption(categories);
-        rootCommand.AddOption(platform);
-
-        rootCommand.SetHandler(InternalIngestCourse, path, author, platform, categories);
-
-        rootCommand.AddValidator(r =>
-        {
-            if (!r.GetValueForArgument(path).Exists) r.ErrorMessage = "The path provided is invalid.";
-        });
-
-        var args = Environment.GetCommandLineArgs()[1..];
-        await rootCommand.InvokeAsync(args);
-    }
-
-    private async Task InternalIngestCourse(DirectoryInfo path, string author, string platform, string[] categories)
+    public async Task Ingest(DirectoryInfo path, string author, string platform, string[] categories)
     {
         var api = _configuration.GetValue<string>("BackendApi");
         var host = _configuration.GetValue<string>("HostMachine");
@@ -62,7 +33,7 @@ internal class IndexCourse
 
         if (string.IsNullOrWhiteSpace(api) || !Uri.IsWellFormedUriString(api, UriKind.Absolute))
         {
-            _logger.LogCritical($"Invalid BACKEND_API Environment Variable value: {api}");
+            _logger.LogCritical("Invalid BACKEND_API Environment Variable value: {Api}", api);
             return;
         }
 
@@ -79,7 +50,7 @@ internal class IndexCourse
 
         if (!await IsBackendAvailable())
         {
-            _logger.LogError($"Couldn't connect to backend api: {backendUri}");
+            _logger.LogError("Couldn't connect to backend api: {BackendUri}", backendUri);
             return;
         }
 
@@ -120,11 +91,11 @@ internal class IndexCourse
         var httpResponseMessage = await http.PostAsJsonAsync("api/Courses", createCourseRequest);
 
         if (!httpResponseMessage.IsSuccessStatusCode)
-            _logger.LogError("Error indexing course, Response: {0}",
-                await httpResponseMessage.Content.ReadFromJsonAsync<object>());
+            _logger.LogError("Error indexing course, Response: {ErrorResponse}",
+                await httpResponseMessage.Content.ReadAsStringAsync());
 
-        await httpResponseMessage.Content.ReadAsStringAsync();
         httpResponseMessage.EnsureSuccessStatusCode();
+        _logger.LogInformation("Inserted {CourseName} into Database", createCourseRequest.Name);
 
         async Task<bool> IsBackendAvailable()
         {
