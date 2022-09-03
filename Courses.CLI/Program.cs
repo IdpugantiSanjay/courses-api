@@ -1,13 +1,10 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
 using System.CommandLine;
-using Elastic.Apm.NetCoreAll;
-using Elastic.Apm.SerilogEnricher;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
-using Serilog.Sinks.Elasticsearch;
 
 namespace Courses.CLI;
 
@@ -16,8 +13,9 @@ public class Program
     public static IHostBuilder CreateHostBuilder(string[] args)
     {
         return Host.CreateDefaultBuilder(args)
-            .UseSerilog()
-            .UseAllElasticApm();
+                .UseSerilog()
+            // .UseAllElasticApm()
+            ;
     }
 
     public static async Task Main(string[] args)
@@ -32,11 +30,11 @@ public class Program
             {
                 lc.ReadFrom.Configuration(configuration)
                     .Enrich.FromLogContext()
-                    .Enrich.WithElasticApmCorrelationInfo()
+                    // .Enrich.WithElasticApmCorrelationInfo()
                     .WriteTo.Console()
                     .WriteTo.File("/var/log/courses/cli/log.txt", rollingInterval: RollingInterval.Day)
-                    .WriteTo.Elasticsearch(
-                        new ElasticsearchSinkOptions(new Uri(configuration.GetConnectionString("ElasticSearchUrl"))))
+                    // .WriteTo.Elasticsearch(
+                    //     new ElasticsearchSinkOptions(new Uri(configuration.GetConnectionString("ElasticSearchUrl"))))
                     ;
             })
             .ConfigureServices(s =>

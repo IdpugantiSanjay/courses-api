@@ -9,6 +9,7 @@
         <PackAsTool>true</PackAsTool>
         <ToolCommandName>courses</ToolCommandName>
         <PackageOutputPath>./nupkg</PackageOutputPath>
+        <Version>0.0.1</Version>
     </PropertyGroup>
 
     <ItemGroup>

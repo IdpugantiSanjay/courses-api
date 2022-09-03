@@ -1,12 +1,12 @@
 using System.Diagnostics;
 using System.Net.Http.Json;
 using Courses.Shared;
-using Elastic.Apm;
-using Elastic.Apm.Api;
 using FFMpegCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Spectre.Console;
+// using Elastic.Apm;
+// using Elastic.Apm.Api;
 
 namespace Courses.CLI;
 
@@ -65,15 +65,15 @@ internal class IndexCourse
         {
             foreach (var (entry, index) in walker.Select((e, index) => (e, index)))
             {
-                var tracerCurrentTransaction = Agent.Tracer.CurrentTransaction;
-                var span = tracerCurrentTransaction.StartSpan("Calculate Video File Duration",
-                    ApiConstants.TypeExternal,
-                    "",
-                    ApiConstants.ActionQuery);
+                // var tracerCurrentTransaction = Agent.Tracer.CurrentTransaction;
+                // var span = tracerCurrentTransaction.StartSpan("Calculate Video File Duration",
+                //     ApiConstants.TypeExternal,
+                //     "",
+                //     ApiConstants.ActionQuery);
 
-                span.SetLabel("FilePath", entry.FullName);
+                // span.SetLabel("FilePath", entry.FullName);
                 var entryDuration = (await FFProbe.AnalyseAsync(entry.FullName)).Duration;
-                span.End();
+                // span.End();
 
                 totalDuration += entryDuration;
                 var section = entry switch
