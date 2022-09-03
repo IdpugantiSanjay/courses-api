@@ -42,6 +42,7 @@ public class Program
                 s.AddSingleton<IndexCourse>();
                 s.AddSingleton<ListCourses>();
                 s.AddSingleton<DeleteCourse>();
+                s.AddSingleton<GetCourse>();
             })
             .Build();
 
@@ -49,15 +50,18 @@ public class Program
         var addCommand = new Command("add");
         var listCommand = new Command("list");
         var deleteCommand = new Command("delete");
+        var getCommand = new Command("get");
 
         rootCommand.AddCommand(addCommand);
         rootCommand.AddCommand(listCommand);
         rootCommand.AddCommand(deleteCommand);
+        rootCommand.AddCommand(getCommand);
 
         var path = new Argument<DirectoryInfo>(
             "path",
             "course path");
 
+        var idArgument = new Argument<int>("id");
         var author = new Option<string>("--author", () => string.Empty);
         var categories = new Option<string[]>("--categories", Array.Empty<string>);
         var platform = new Option<string>("--platform", () => string.Empty);
@@ -71,8 +75,8 @@ public class Program
         listCommand.AddOption(categories);
         listCommand.AddOption(platform);
 
-        var idArgument = new Argument<int>("id");
-        deleteCommand.Add(idArgument);
+        getCommand.AddArgument(idArgument);
+        deleteCommand.AddArgument(idArgument);
 
         addCommand.SetHandler(async (pathInput, authorInput, platformInput, categoriesInput) =>
         {
@@ -96,6 +100,12 @@ public class Program
         {
             var delete = host.Services.GetService<DeleteCourse>()!;
             await delete.Delete(id);
+        }, idArgument);
+
+        getCommand.SetHandler(async id =>
+        {
+            var get = host.Services.GetService<GetCourse>()!;
+            await get.Get(id);
         }, idArgument);
 
         await rootCommand.InvokeAsync(args);
