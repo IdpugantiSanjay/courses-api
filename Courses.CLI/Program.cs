@@ -109,10 +109,10 @@ public class Program
             $"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Development"}.json";
 
         builder.SetBasePath(Directory.GetCurrentDirectory())
-            .AddJsonFile("appsettings.json", false, true)
+            .AddJsonFile("appsettings.json", true, true)
             .AddJsonFile(
                 secondaryAppSettingName,
-                false, true)
+                true, true)
             .AddEnvironmentVariables()
             ;
     }
