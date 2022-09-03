@@ -1,5 +1,6 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
+using System.CommandLine;
 using Elastic.Apm.NetCoreAll;
 using Elastic.Apm.SerilogEnricher;
 using Microsoft.Extensions.Configuration;
@@ -38,11 +39,68 @@ public class Program
                         new ElasticsearchSinkOptions(new Uri(configuration.GetConnectionString("ElasticSearchUrl"))))
                     ;
             })
-            .ConfigureServices(s => { s.AddSingleton<IndexCourse>(); })
+            .ConfigureServices(s =>
+            {
+                s.AddSingleton<IndexCourse>();
+                s.AddSingleton<ListCourses>();
+                s.AddSingleton<DeleteCourse>();
+            })
             .Build();
 
-        var ingest = host.Services.GetService<IndexCourse>()!;
-        await ingest.Ingest();
+        var rootCommand = new RootCommand("cli to ingest courses");
+        var addCommand = new Command("add");
+        var listCommand = new Command("list");
+        var deleteCommand = new Command("delete");
+
+        rootCommand.AddCommand(addCommand);
+        rootCommand.AddCommand(listCommand);
+        rootCommand.AddCommand(deleteCommand);
+
+        var path = new Argument<DirectoryInfo>(
+            "path",
+            "course path");
+
+        var author = new Option<string>("--author", () => string.Empty);
+        var categories = new Option<string[]>("--categories", Array.Empty<string>);
+        var platform = new Option<string>("--platform", () => string.Empty);
+
+        addCommand.AddArgument(path);
+        addCommand.AddOption(author);
+        addCommand.AddOption(categories);
+        addCommand.AddOption(platform);
+
+        listCommand.AddOption(author);
+        listCommand.AddOption(categories);
+        listCommand.AddOption(platform);
+
+        var idArgument = new Argument<int>("id");
+        deleteCommand.Add(idArgument);
+
+        addCommand.SetHandler(async (pathInput, authorInput, platformInput, categoriesInput) =>
+        {
+            var ingest = host.Services.GetService<IndexCourse>()!;
+            await ingest.Ingest(pathInput, authorInput, platformInput, categoriesInput);
+        }, path, author, platform, categories);
+
+        addCommand.AddValidator(r =>
+        {
+            var pathValue = r.GetValueForArgument(path);
+            if (pathValue is null || !pathValue.Exists) r.ErrorMessage = "The path provided is invalid.";
+        });
+
+        listCommand.SetHandler(async () =>
+        {
+            var list = host.Services.GetService<ListCourses>()!;
+            await list.List();
+        });
+
+        deleteCommand.SetHandler(async id =>
+        {
+            var delete = host.Services.GetService<DeleteCourse>()!;
+            await delete.Delete(id);
+        }, idArgument);
+
+        await rootCommand.InvokeAsync(args);
     }
 
     private static void BuildConfig(IConfigurationBuilder builder)

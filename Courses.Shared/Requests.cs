@@ -21,6 +21,8 @@ public record GetCourseView(int Id, string Name, TimeSpan Duration, string[]? Ca
 
 public record GetCourseByIdRequest(int Id) : IRequest<GetByIdCourseView>;
 
+public record DeleteCourseByIdRequest(int Id) : IRequest;
+
 [UsedImplicitly]
 public record GetByIdCourseView(int Id, string Name, TimeSpan Duration, string[]? Categories, bool IsHighDefinition,
     string? Author, string? Platform, string Path, string Host, GetByIdCourseEntryView[] Entries);

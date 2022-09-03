@@ -1,4 +1,4 @@
-using System.CommandLine;
+using System.Diagnostics;
 using System.Net.Http.Json;
 using Courses.Shared;
 using Elastic.Apm;
@@ -6,6 +6,7 @@ using Elastic.Apm.Api;
 using FFMpegCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Spectre.Console;
 
 namespace Courses.CLI;
 
@@ -20,35 +21,7 @@ internal class IndexCourse
         _logger = logger;
     }
 
-    public async Task Ingest()
-    {
-        var rootCommand = new RootCommand("CLI to Ingest Courses");
-
-        var path = new Argument<DirectoryInfo>(
-            "path",
-            "course path");
-
-        var author = new Option<string>("--author", () => string.Empty);
-        var categories = new Option<string[]>("--categories", Array.Empty<string>);
-        var platform = new Option<string>("--platform", () => string.Empty);
-
-        rootCommand.AddArgument(path);
-        rootCommand.AddOption(author);
-        rootCommand.AddOption(categories);
-        rootCommand.AddOption(platform);
-
-        rootCommand.SetHandler(InternalIngestCourse, path, author, platform, categories);
-
-        rootCommand.AddValidator(r =>
-        {
-            if (!r.GetValueForArgument(path).Exists) r.ErrorMessage = "The path provided is invalid.";
-        });
-
-        var args = Environment.GetCommandLineArgs()[1..];
-        await rootCommand.InvokeAsync(args);
-    }
-
-    private async Task InternalIngestCourse(DirectoryInfo path, string author, string platform, string[] categories)
+    public async Task Ingest(DirectoryInfo path, string author, string platform, string[] categories)
     {
         var api = _configuration.GetValue<string>("BackendApi");
         var host = _configuration.GetValue<string>("HostMachine");
@@ -62,7 +35,7 @@ internal class IndexCourse
 
         if (string.IsNullOrWhiteSpace(api) || !Uri.IsWellFormedUriString(api, UriKind.Absolute))
         {
-            _logger.LogCritical($"Invalid BACKEND_API Environment Variable value: {api}");
+            _logger.LogCritical("Invalid BACKEND_API Environment Variable value: {Api}", api);
             return;
         }
 
@@ -79,7 +52,7 @@ internal class IndexCourse
 
         if (!await IsBackendAvailable())
         {
-            _logger.LogError($"Couldn't connect to backend api: {backendUri}");
+            _logger.LogError("Couldn't connect to backend api: {BackendUri}", backendUri);
             return;
         }
 
@@ -88,43 +61,51 @@ internal class IndexCourse
         var totalDuration = TimeSpan.Zero;
         var entries = new List<CreateCourseRequestEntry>();
 
-
-        foreach (var (entry, index) in walker.Select((e, index) => (e, index)))
+        await AnsiConsole.Status().StartAsync("Processing...", async _ =>
         {
-            var tracerCurrentTransaction = Agent.Tracer.CurrentTransaction;
-            var span = tracerCurrentTransaction.StartSpan("Calculate Video File Duration", ApiConstants.TypeExternal,
-                "",
-                ApiConstants.ActionQuery);
-
-            span.SetLabel("FilePath", entry.FullName);
-            var entryDuration = (await FFProbe.AnalyseAsync(entry.FullName)).Duration;
-            span.End();
-
-            totalDuration += entryDuration;
-            var section = entry switch
+            foreach (var (entry, index) in walker.Select((e, index) => (e, index)))
             {
-                FileInfo { Directory: not null } fileInfo when fileInfo.Directory.Name != path.Name => fileInfo
-                    .Directory
-                    .Name,
-                _ => string.Empty
-            };
-            entries.Add(new CreateCourseRequestEntry(entry.Name, entryDuration, index + 1, section));
-        }
+                var tracerCurrentTransaction = Agent.Tracer.CurrentTransaction;
+                var span = tracerCurrentTransaction.StartSpan("Calculate Video File Duration",
+                    ApiConstants.TypeExternal,
+                    "",
+                    ApiConstants.ActionQuery);
 
+                span.SetLabel("FilePath", entry.FullName);
+                var entryDuration = (await FFProbe.AnalyseAsync(entry.FullName)).Duration;
+                span.End();
+
+                totalDuration += entryDuration;
+                var section = entry switch
+                {
+                    FileInfo { Directory: not null } fileInfo when fileInfo.Directory.Name != path.Name => fileInfo
+                        .Directory
+                        .Name,
+                    _ => string.Empty
+                };
+                entries.Add(new CreateCourseRequestEntry(entry.Name, entryDuration, index + 1, section));
+            }
+        });
 
         var createCourseRequest =
             new CreateCourseRequest(path.Name, totalDuration, categories, false, author, platform, path.FullName,
                 host, entries.ToArray());
 
+        var postAsyncTask = http.PostAsJsonAsync("api/Courses", createCourseRequest);
+        HttpResponseMessage? httpResponseMessage = null;
 
-        var httpResponseMessage = await http.PostAsJsonAsync("api/Courses", createCourseRequest);
+        await AnsiConsole.Status()
+            .StartAsync("Inserting...", async _ => { httpResponseMessage = await postAsyncTask; });
+
+
+        Debug.Assert(httpResponseMessage != null, nameof(httpResponseMessage) + " != null");
 
         if (!httpResponseMessage.IsSuccessStatusCode)
-            _logger.LogError("Error indexing course, Response: {0}",
-                await httpResponseMessage.Content.ReadFromJsonAsync<object>());
+            _logger.LogError("Error indexing course, Response: {ErrorResponse}",
+                await httpResponseMessage.Content.ReadAsStringAsync());
 
-        await httpResponseMessage.Content.ReadAsStringAsync();
         httpResponseMessage.EnsureSuccessStatusCode();
+        _logger.LogInformation("Inserted {CourseName} into Database", createCourseRequest.Name);
 
         async Task<bool> IsBackendAvailable()
         {
