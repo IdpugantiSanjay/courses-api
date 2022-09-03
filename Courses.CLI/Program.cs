@@ -43,15 +43,18 @@ public class Program
             {
                 s.AddSingleton<IndexCourse>();
                 s.AddSingleton<ListCourses>();
+                s.AddSingleton<DeleteCourse>();
             })
             .Build();
 
         var rootCommand = new RootCommand("cli to ingest courses");
         var addCommand = new Command("add");
         var listCommand = new Command("list");
+        var deleteCommand = new Command("delete");
 
         rootCommand.AddCommand(addCommand);
         rootCommand.AddCommand(listCommand);
+        rootCommand.AddCommand(deleteCommand);
 
         var path = new Argument<DirectoryInfo>(
             "path",
@@ -70,6 +73,9 @@ public class Program
         listCommand.AddOption(categories);
         listCommand.AddOption(platform);
 
+        var idArgument = new Argument<int>("id");
+        deleteCommand.Add(idArgument);
+
         addCommand.SetHandler(async (pathInput, authorInput, platformInput, categoriesInput) =>
         {
             var ingest = host.Services.GetService<IndexCourse>()!;
@@ -87,6 +93,12 @@ public class Program
             var list = host.Services.GetService<ListCourses>()!;
             await list.List();
         });
+
+        deleteCommand.SetHandler(async id =>
+        {
+            var delete = host.Services.GetService<DeleteCourse>()!;
+            await delete.Delete(id);
+        }, idArgument);
 
         await rootCommand.InvokeAsync(args);
     }

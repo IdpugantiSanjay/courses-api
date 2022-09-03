@@ -1,59 +1,49 @@
 using System.Diagnostics;
-using System.Net.Http.Json;
-using Courses.Shared;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Spectre.Console;
 
 namespace Courses.CLI;
 
-internal class ListCourses
+public class DeleteCourse
 {
     private readonly IConfiguration _configuration;
-    private readonly ILogger<ListCourses> _logger;
+    private readonly ILogger<DeleteCourse> _logger;
 
-    public ListCourses(IConfiguration configuration, ILogger<ListCourses> logger)
+    public DeleteCourse(IConfiguration configuration, ILogger<DeleteCourse> logger)
     {
         _configuration = configuration;
         _logger = logger;
     }
 
-    public async Task List()
+    public async Task Delete(int id)
     {
+        var api = _configuration.GetValue<string>("BackendApi");
+        var backendUri = new Uri(api);
+
         var handler = new HttpClientHandler
         {
             ServerCertificateCustomValidationCallback =
                 HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
         };
 
-        var api = _configuration.GetValue<string>("BackendApi");
-        var backendUri = new Uri(api);
-
         var http = new HttpClient(handler) { BaseAddress = backendUri };
-        var getAsyncTask = http.GetAsync("api/Courses");
+        var deleteAsync = http.DeleteAsync($"api/Courses/{id}");
         HttpResponseMessage? httpResponseMessage = null;
 
         await AnsiConsole.Status()
             .StartAsync("Loading...", async _ =>
             {
                 // await Task.Delay(2_000);
-                httpResponseMessage = await getAsyncTask;
+                httpResponseMessage = await deleteAsync;
             });
 
         Debug.Assert(httpResponseMessage != null, nameof(httpResponseMessage) + " != null");
 
         if (!httpResponseMessage.IsSuccessStatusCode)
-            _logger.LogError("Error indexing course, Response: {ErrorResponse}",
+            _logger.LogError("Error Deleting course, Response: {ErrorResponse}",
                 await httpResponseMessage.Content.ReadAsStringAsync());
-
-        var response = await httpResponseMessage.Content.ReadFromJsonAsync<GetCoursesResponse>();
-
-        Debug.Assert(response != null, nameof(response) + " != null");
-
-        foreach (var course in response.Courses)
-        {
-            Console.Write($"{course.Id}. ");
-            AnsiConsole.Console.WriteLine(course.Name, new Style(Color.Turquoise2));
-        }
+        else
+            AnsiConsole.Console.WriteLine("Course Deleted Successfully", new Style(Color.DeepPink3));
     }
 }

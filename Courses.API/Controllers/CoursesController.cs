@@ -32,4 +32,10 @@ public class CoursesController : ControllerBase
     {
         return Ok(await _mediator.Send(new GetCourseByIdRequest(id)));
     }
+
+    [HttpDelete("{id:int}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        return Ok(await _mediator.Send(new GetCourseByIdRequest(id)));
+    }
 }

@@ -34,12 +34,12 @@ public class CreateCourseRequestEntryValidator : AbstractValidator<CreateCourseR
 }
 
 [UsedImplicitly]
-public class CreateCoursesHandler : IRequestHandler<CreateCourseRequest>
+public class CreateCourseHandler : IRequestHandler<CreateCourseRequest>
 {
     private readonly AppDbContext _context;
     private readonly ILogger<IRequestHandler<CreateCourseRequest>> _logger;
 
-    public CreateCoursesHandler(AppDbContext context, ILogger<CreateCoursesHandler> logger)
+    public CreateCourseHandler(AppDbContext context, ILogger<CreateCourseHandler> logger)
     {
         _context = context;
         _logger = logger;
