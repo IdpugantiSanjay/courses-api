@@ -32,7 +32,7 @@ public class DeleteCourse
         HttpResponseMessage? httpResponseMessage = null;
 
         await AnsiConsole.Status()
-            .StartAsync("Loading...", async _ =>
+            .StartAsync("Deleting...", async _ =>
             {
                 // await Task.Delay(2_000);
                 httpResponseMessage = await deleteAsync;
