@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Net.Http.Json;
 using Courses.Shared;
 using Elastic.Apm;
@@ -5,6 +6,7 @@ using Elastic.Apm.Api;
 using FFMpegCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Spectre.Console;
 
 namespace Courses.CLI;
 
@@ -59,36 +61,44 @@ internal class IndexCourse
         var totalDuration = TimeSpan.Zero;
         var entries = new List<CreateCourseRequestEntry>();
 
-
-        foreach (var (entry, index) in walker.Select((e, index) => (e, index)))
+        await AnsiConsole.Status().StartAsync("Processing...", async _ =>
         {
-            var tracerCurrentTransaction = Agent.Tracer.CurrentTransaction;
-            var span = tracerCurrentTransaction.StartSpan("Calculate Video File Duration", ApiConstants.TypeExternal,
-                "",
-                ApiConstants.ActionQuery);
-
-            span.SetLabel("FilePath", entry.FullName);
-            var entryDuration = (await FFProbe.AnalyseAsync(entry.FullName)).Duration;
-            span.End();
-
-            totalDuration += entryDuration;
-            var section = entry switch
+            foreach (var (entry, index) in walker.Select((e, index) => (e, index)))
             {
-                FileInfo { Directory: not null } fileInfo when fileInfo.Directory.Name != path.Name => fileInfo
-                    .Directory
-                    .Name,
-                _ => string.Empty
-            };
-            entries.Add(new CreateCourseRequestEntry(entry.Name, entryDuration, index + 1, section));
-        }
+                var tracerCurrentTransaction = Agent.Tracer.CurrentTransaction;
+                var span = tracerCurrentTransaction.StartSpan("Calculate Video File Duration",
+                    ApiConstants.TypeExternal,
+                    "",
+                    ApiConstants.ActionQuery);
 
+                span.SetLabel("FilePath", entry.FullName);
+                var entryDuration = (await FFProbe.AnalyseAsync(entry.FullName)).Duration;
+                span.End();
+
+                totalDuration += entryDuration;
+                var section = entry switch
+                {
+                    FileInfo { Directory: not null } fileInfo when fileInfo.Directory.Name != path.Name => fileInfo
+                        .Directory
+                        .Name,
+                    _ => string.Empty
+                };
+                entries.Add(new CreateCourseRequestEntry(entry.Name, entryDuration, index + 1, section));
+            }
+        });
 
         var createCourseRequest =
             new CreateCourseRequest(path.Name, totalDuration, categories, false, author, platform, path.FullName,
                 host, entries.ToArray());
 
+        var postAsyncTask = http.PostAsJsonAsync("api/Courses", createCourseRequest);
+        HttpResponseMessage? httpResponseMessage = null;
 
-        var httpResponseMessage = await http.PostAsJsonAsync("api/Courses", createCourseRequest);
+        await AnsiConsole.Status()
+            .StartAsync("Inserting...", async _ => { httpResponseMessage = await postAsyncTask; });
+
+
+        Debug.Assert(httpResponseMessage != null, nameof(httpResponseMessage) + " != null");
 
         if (!httpResponseMessage.IsSuccessStatusCode)
             _logger.LogError("Error indexing course, Response: {ErrorResponse}",

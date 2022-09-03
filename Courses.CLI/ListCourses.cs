@@ -36,8 +36,8 @@ internal class ListCourses
         await AnsiConsole.Status()
             .StartAsync("Loading...", async _ =>
             {
-                httpResponseMessage = await getAsyncTask;
                 // await Task.Delay(2_000);
+                httpResponseMessage = await getAsyncTask;
             });
 
         Debug.Assert(httpResponseMessage != null, nameof(httpResponseMessage) + " != null");
