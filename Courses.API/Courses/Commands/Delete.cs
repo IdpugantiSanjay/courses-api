@@ -19,7 +19,9 @@ public class DeleteCourseHandler : IRequestHandler<DeleteCourseByIdRequest>
 
     public async Task<Unit> Handle(DeleteCourseByIdRequest request, CancellationToken cancellationToken)
     {
-        _context.Courses.Remove(new Course { Id = request.Id });
+        var courseToDelete = new Course { Id = request.Id };
+        _context.Courses.Attach(courseToDelete);
+        _context.Courses.Remove(courseToDelete);
         await _context.SaveChangesAsync(cancellationToken);
         _logger.LogInformation("Deleted Course with Id: {Id}", request.Id);
         return Unit.Value;
