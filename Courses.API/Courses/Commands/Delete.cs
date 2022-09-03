@@ -2,7 +2,6 @@ using Courses.API.Database;
 using Courses.Shared;
 using JetBrains.Annotations;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 
 namespace Courses.API.Courses.Commands;
 
@@ -20,9 +19,9 @@ public class DeleteCourseHandler : IRequestHandler<DeleteCourseByIdRequest>
 
     public async Task<Unit> Handle(DeleteCourseByIdRequest request, CancellationToken cancellationToken)
     {
-        var courseToDelete = await _context.Courses.FirstOrDefaultAsync(c => c.Id == request.Id, cancellationToken);
-        ArgumentNullException.ThrowIfNull(courseToDelete);
-        _context.Courses.Remove(courseToDelete);
+        _context.Courses.Remove(new Course { Id = request.Id });
+        await _context.SaveChangesAsync(cancellationToken);
+        _logger.LogInformation("Deleted Course with Id: {Id}", request.Id);
         return Unit.Value;
     }
 }
