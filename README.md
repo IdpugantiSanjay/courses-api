@@ -30,7 +30,7 @@ Used Github Actions for CI
 
 
 #### TODO
-- [ ] Implement Health Check UI to see which components are down.
+- [x] Implement Health Check UI to see which components are down.
 - [ ] Implement Vue/Vite frontend with ASP.NET core SPA template
 - [ ] Implement ```dotnet-suggest```
 - [ ] Implement Linting withing IDE and third party tools
