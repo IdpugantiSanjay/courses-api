@@ -38,3 +38,8 @@ Used Github Actions for CI
 - [ ] Implement ```dotnet-suggest```
 - [ ] Implement Linting withing IDE and third party tools
 - [ ] Integrate with Nautilus Scripts
+
+Courses.CLI linux command
+```bash
+    find . -maxdepth 1 -type d | tail -n +2 | xargs -{} readlink -f '{}' |  xargs -I{} courses add '{}' --categories vue
+```
