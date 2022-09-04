@@ -100,6 +100,9 @@ public static class Configure
 
     public static void ConfigureHttpPipeline(this WebApplication app)
     {
+        if (app.Environment.IsDevelopment())
+            app.UseCors(cp => cp.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin());
+
         app.MapHealthChecks("/healthz", new HealthCheckOptions
         {
             ResultStatusCodes = new Dictionary<HealthStatus, int>

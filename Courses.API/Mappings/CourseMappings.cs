@@ -9,6 +9,7 @@ public class CourseMappings : IRegister
     public void Register(TypeAdapterConfig config)
     {
         config.NewConfig<Course, GetCourseView>()
+            .Map(view => view.Duration, c => c.Duration.ToString("h'h 'm'm 's's'"))
             .Map(view => view.Author, c => c.Author.Name)
             .Map(view => view.Platform, c => c.Platform.Name)
             ;

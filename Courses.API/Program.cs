@@ -15,8 +15,6 @@ public class Program
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
 
-        builder.Services.AddSpaStaticFiles(options => { options.RootPath = "dist"; });
-
         builder.ConfigureInfrastructureDependencies(builder.Configuration);
 
         var app = builder.Build();
@@ -32,13 +30,6 @@ public class Program
         app.UseHttpsRedirection();
 
         app.UseAuthorization();
-
-        app.UseSpaStaticFiles();
-
-        app.UseSpa(spaBuilder =>
-        {
-            if (app.Environment.IsDevelopment()) spaBuilder.UseProxyToSpaDevelopmentServer("http://127.0.0.1:5174/");
-        });
 
         app.MapControllers();
 

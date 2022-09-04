@@ -7,6 +7,9 @@ Used .NET, ASP.NET Core and EF Core to develop the solution.
 ![Postgres](https://img.shields.io/badge/postgres-%23316192.svg?style=for-the-badge&logo=postgresql&logoColor=white) \
 Used Postgres as the database.
 
+![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white) \
+Used TailwindCSS for CSS styling
+
 ![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white) \
 Used Docker Container to easier CI/CD and deployments.
 
