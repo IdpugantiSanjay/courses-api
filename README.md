@@ -43,3 +43,9 @@ Courses.CLI linux command
 ```bash
     find . -maxdepth 1 -type d | tail -n +2 | xargs -{} readlink -f '{}' |  xargs -I{} courses add '{}' --categories vue
 ```
+
+Command to update dotnet-tool in directory Courses.CLI
+```bash
+    dotnet pack
+    dotnet tool update --global --add-source ./nupkg courses.cli
+```

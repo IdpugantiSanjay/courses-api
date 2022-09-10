@@ -102,7 +102,7 @@ internal class IndexCourse
         if (!path.Name.Contains($"{totalDuration:G}"))
         {
             var moveToPath =
-                $"{path.Parent?.FullName}/{path.Name} {(isCourseHd ? "[HD]" : "")} {string.Concat(totalDuration.ToString("G").TakeWhile(c => c != '.'))}";
+                $"{path.Parent?.FullName}/{path.Name}{(isCourseHd ? " [HD] " : " ")}[{FormatTimeSpan(totalDuration)}]";
             path.MoveTo(moveToPath);
         }
 
@@ -136,5 +136,15 @@ internal class IndexCourse
             var healthResponse = await http.GetAsync("/healthz");
             return healthResponse.IsSuccessStatusCode;
         }
+    }
+
+    private static string FormatTimeSpan(TimeSpan timeSpan)
+    {
+        var duration = timeSpan.Days > 0
+            ? $"{timeSpan.Days}d{timeSpan.Hours:0}h{timeSpan.Minutes:00}m"
+            : timeSpan.Hours > 0
+                ? $"{timeSpan.Hours:0}h{timeSpan.Minutes:0}m"
+                : $"{timeSpan.Minutes:0}m";
+        return duration;
     }
 }
