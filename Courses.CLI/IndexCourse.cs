@@ -5,6 +5,7 @@ using FFMpegCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Spectre.Console;
+
 // using Elastic.Apm;
 // using Elastic.Apm.Api;
 
@@ -19,6 +20,13 @@ internal class IndexCourse
     {
         _configuration = configuration;
         _logger = logger;
+    }
+
+    private static async Task<(TimeSpan, bool)> VideoProperties(string filePath)
+    {
+        var mediaAnalysis = await FFProbe.AnalyseAsync(filePath);
+        var videoStream = mediaAnalysis.VideoStreams.First();
+        return (mediaAnalysis.Duration, videoStream.Width >= 1920);
     }
 
     public async Task Ingest(DirectoryInfo path, string author, string platform, string[] categories)
@@ -60,6 +68,7 @@ internal class IndexCourse
         var walker = new CourseDirectoryWalker(path);
         var totalDuration = TimeSpan.Zero;
         var entries = new List<CreateCourseRequestEntry>();
+        var hdVideosCount = 0;
 
         await AnsiConsole.Status().StartAsync("Processing...", async _ =>
         {
@@ -72,7 +81,9 @@ internal class IndexCourse
                 //     ApiConstants.ActionQuery);
 
                 // span.SetLabel("FilePath", entry.FullName);
-                var entryDuration = (await FFProbe.AnalyseAsync(entry.FullName)).Duration;
+                var (entryDuration, isHd) = await VideoProperties(entry.FullName);
+                if (isHd) hdVideosCount++;
+
                 // span.End();
 
                 totalDuration += entryDuration;
@@ -87,16 +98,18 @@ internal class IndexCourse
             }
         });
 
+        var entriesArray = entries.ToArray();
+
+        var isCourseHd = hdVideosCount / entriesArray.Length * 100 > 50;
         var createCourseRequest =
-            new CreateCourseRequest(path.Name, totalDuration, categories, false, author, platform, path.FullName,
-                host, entries.ToArray());
+            new CreateCourseRequest(path.Name, totalDuration, categories, isCourseHd, author, platform, path.FullName,
+                host, entriesArray);
 
         var postAsyncTask = http.PostAsJsonAsync("api/Courses", createCourseRequest);
         HttpResponseMessage? httpResponseMessage = null;
 
         await AnsiConsole.Status()
             .StartAsync("Inserting...", async _ => { httpResponseMessage = await postAsyncTask; });
-
 
         Debug.Assert(httpResponseMessage != null, nameof(httpResponseMessage) + " != null");
 
