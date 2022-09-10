@@ -99,7 +99,7 @@ internal class IndexCourse
 
         var isCourseHd = decimal.Divide(hdVideosCount, entriesArray.Length) * 100 > 50;
 
-        if (!path.Name.Contains($"{totalDuration:G}"))
+        if (!path.Name.Contains(FormatTimeSpan(totalDuration)))
         {
             var moveToPath =
                 $"{path.Parent?.FullName}/{path.Name}{(isCourseHd ? " [HD] " : " ")}[{FormatTimeSpan(totalDuration)}]";
