@@ -6,7 +6,7 @@ namespace Courses.CLI;
 
 internal class CourseDirectoryWalker : IEnumerable<FileSystemInfo>
 {
-    private static readonly string[] VideoExtensions = { "mp4", "ts", "mkv", "webm", "m4v" };
+    internal static readonly string[] VideoExtensions = { "mp4", "ts", "mkv", "webm", "m4v" };
     private readonly DirectoryInfo _path;
 
     public CourseDirectoryWalker(DirectoryInfo path)
@@ -18,7 +18,6 @@ internal class CourseDirectoryWalker : IEnumerable<FileSystemInfo>
     {
         var transaction = Agent.Tracer.CurrentTransaction ??
                           Agent.Tracer.StartTransaction(nameof(CourseDirectoryWalker), ApiConstants.TypeStorage);
-
 
         var span = transaction.StartSpan("Read Course Files from Disk", ApiConstants.TypeStorage, "",
             ApiConstants.ActionQuery);
@@ -34,10 +33,12 @@ internal class CourseDirectoryWalker : IEnumerable<FileSystemInfo>
                 yield return file;
             }
 
+
         if (hasFilesInDirectory) yield break;
 
         var directories = _path.EnumerateDirectories().ToList();
         directories.Sort(new CourseFileSystemEntriesComparer());
+
         foreach (var directory in directories)
         foreach (var fileOrDirectory in new CourseDirectoryWalker(directory))
             yield return fileOrDirectory;

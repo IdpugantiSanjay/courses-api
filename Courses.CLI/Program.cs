@@ -40,6 +40,7 @@ public class Program
             .ConfigureServices(s =>
             {
                 s.AddSingleton<IndexCourse>();
+                s.AddSingleton<CleanCourseDirectory>();
                 s.AddSingleton<ListCourses>();
                 s.AddSingleton<DeleteCourse>();
                 s.AddSingleton<GetCourse>();
@@ -81,7 +82,9 @@ public class Program
         addCommand.SetHandler(async (pathInput, authorInput, platformInput, categoriesInput) =>
         {
             var ingest = host.Services.GetService<IndexCourse>()!;
-            await ingest.Ingest(pathInput, authorInput, platformInput, categoriesInput);
+            var cleaner = host.Services.GetService<CleanCourseDirectory>()!;
+            var cleaned = cleaner.Clean(pathInput);
+            await ingest.Ingest(cleaned, authorInput, platformInput, categoriesInput);
         }, path, author, platform, categories);
 
         addCommand.AddValidator(r =>
