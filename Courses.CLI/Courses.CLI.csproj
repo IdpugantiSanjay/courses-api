@@ -9,7 +9,6 @@
         <PackAsTool>true</PackAsTool>
         <ToolCommandName>courses</ToolCommandName>
         <PackageOutputPath>./nupkg</PackageOutputPath>
-        <TargetFrameworks>net5.0;net6.0</TargetFrameworks>
         <LangVersion>preview</LangVersion>
     </PropertyGroup>
 
