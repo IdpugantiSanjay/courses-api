@@ -52,18 +52,18 @@ public class CleanCourseDirectory
                 if (Directory.Exists(entryPath))
                 {
                     Directory.Move(entryPath, entryPath.Replace($"/{new DirectoryInfo(folder.FullName).Name}", ""));
-                    _logger.LogInformation("Moved {OriginalName} from {NewName}", entryPath,
+                    _logger.LogDebug("Moved {OriginalName} from {NewName}", entryPath,
                         entryPath.Replace($"/{folder.FullName}", ""));
                 }
                 else if (File.Exists(entryPath))
                 {
                     File.Move(entryPath, entryPath.Replace($"/{new FileInfo(folder.FullName).Name}", ""));
-                    _logger.LogInformation("Moved {OriginalName} from {NewName}", entryPath,
+                    _logger.LogDebug("Moved {OriginalName} from {NewName}", entryPath,
                         entryPath.Replace($"/{folder.FullName}", ""));
                 }
         }
 
-        _logger.LogInformation("Course Path after cleaning: {CoursePath}", coursePath.FullName);
+        _logger.LogDebug("Course Path after cleaning: {CoursePath}", coursePath.FullName);
         return coursePath;
     }
 

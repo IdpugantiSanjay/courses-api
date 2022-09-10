@@ -96,12 +96,8 @@ internal class IndexCourse
 
         if (entriesArray.Length == 0) return;
 
-        _logger.LogInformation("HD Videos Count: {HdCount}", hdVideosCount);
-        _logger.LogInformation("HD Videos Percentage: {HdPercentage}",
-            decimal.Divide(hdVideosCount, entriesArray.Length) * 100);
 
         var isCourseHd = decimal.Divide(hdVideosCount, entriesArray.Length) * 100 > 50;
-
 
         if (!path.Name.Contains($"{totalDuration:G}"))
         {
@@ -110,12 +106,9 @@ internal class IndexCourse
             path.MoveTo(moveToPath);
         }
 
-
         var createCourseRequest =
             new CreateCourseRequest(path.Name, totalDuration, categories, isCourseHd, author, platform, path.FullName,
                 host, entriesArray);
-
-        Console.WriteLine(createCourseRequest);
 
         if (!await IsBackendAvailable())
         {
@@ -136,7 +129,7 @@ internal class IndexCourse
                 await httpResponseMessage.Content.ReadAsStringAsync());
 
         httpResponseMessage.EnsureSuccessStatusCode();
-        _logger.LogInformation("Inserted {CourseName} into Database", createCourseRequest.Name);
+        _logger.LogDebug("Added {CourseName} into Database", createCourseRequest.Name);
 
         async Task<bool> IsBackendAvailable()
         {
