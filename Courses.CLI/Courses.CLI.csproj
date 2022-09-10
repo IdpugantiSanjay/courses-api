@@ -10,6 +10,7 @@
         <ToolCommandName>courses</ToolCommandName>
         <PackageOutputPath>./nupkg</PackageOutputPath>
         <Version>0.0.1</Version>
+        <LangVersion>preview</LangVersion>
     </PropertyGroup>
 
     <ItemGroup>

@@ -101,6 +101,16 @@ internal class IndexCourse
             decimal.Divide(hdVideosCount, entriesArray.Length) * 100);
 
         var isCourseHd = decimal.Divide(hdVideosCount, entriesArray.Length) * 100 > 50;
+
+
+        if (!path.Name.Contains($"{totalDuration:G}"))
+        {
+            var moveToPath =
+                $"{path.Parent?.FullName}/{path.Name} {(isCourseHd ? "[HD]" : "")} {string.Concat(totalDuration.ToString("G").TakeWhile(c => c != '.'))}";
+            path.MoveTo(moveToPath);
+        }
+
+
         var createCourseRequest =
             new CreateCourseRequest(path.Name, totalDuration, categories, isCourseHd, author, platform, path.FullName,
                 host, entriesArray);
