@@ -70,7 +70,7 @@ public class CleanCourseDirectory
 
     private static string RemoveBranding(string name)
     {
-        return Regex.Replace(name, "").Replace("git.ir", "");
+        return Regex.Replace(name, "").Replace("git.ir", "").Trim();
     }
 
     private static bool BrandingExists(string name)
