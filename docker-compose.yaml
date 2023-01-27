@@ -1,0 +1,14 @@
+services:
+  ui:
+    image: isanjay112/courses-ui
+    ports:
+      - "4200:4200"
+    restart: unless-stopped
+  api:
+    image: isanjay112/courses
+    ports:
+      - "5195:80"
+    environment:
+      - LogToPath=/home/sanjay/Work/DockerComposeFiles/courses/logs
+      - ConnectionStrings__Postgres=Host=192.168.29.157;Username=postgres;Password=postgres;Database=courses
+    restart: unless-stopped
