@@ -9,7 +9,9 @@ public class CourseMappings : IRegister
     public void Register(TypeAdapterConfig config)
     {
         config.NewConfig<Course, GetCourseView>()
-            .Map(view => view.Duration, c => c.Duration.ToString("h'h 'm'm 's's'"))
+            // .Map(view => view.Duration, c => c.Duration.TotalHours > 1 ? $"{c.Duration.TotalHours}h" : $"{c.Duration.Minutes}m")
+            // .Map(view => view.Duration, c => c.Duration.ToString("h'h 'm'm 's's'"))
+            .Map(view => view.Duration, c => c.Duration.ToString("h'h 'm'm'"))
             .Map(view => view.Author, c => c.Author.Name)
             .Map(view => view.Platform, c => c.Platform.Name)
             ;
@@ -17,14 +19,16 @@ public class CourseMappings : IRegister
         config.NewConfig<Course, GetByIdCourseView>()
             .Map(dest => dest.Author, c => c.Author)
             .Map(dest => dest.Platform, c => c.Platform)
+            // .Map(dest => dest.Duration, c => c.Duration.TotalHours > 1 ? $"{c.Duration.TotalHours}h" : $"{c.Duration.Minutes}m")
+            // .Map(view => view.Duration, c => c.Duration.ToString("h'h 'm'm 's's'"))
+            .Map(view => view.Duration, c => c.Duration.ToString("h'h 'm'm'"))
             ;
 
-        config.NewConfig<CourseEntry, GetByIdCourseEntryView>();
-        // config.NewConfig<Course, CourseDto>()
-        //     .Map(dto => dto.Entries, nameof(Course.Entries))
-        //     // .Map(dto => dto.Name, nameof(Course.Name))
-        //     // .Map(dto => dto.Name, nameof(Course.Name))
-        //     ;
-        // config.NewConfig<CourseEntry, CourseEntryDto>();
+        config.NewConfig<CourseEntry, GetByIdCourseEntryView>()
+            .Map(dest => dest.Duration, s => $"{Math.Round(s.Duration.TotalMinutes)}m")
+            ;
+
+        config.NewConfig<Watched.Watched, GetWatchedResponseEntryView>()
+            .Map(dest => dest.Id, s => s.EntryId);
     }
 }

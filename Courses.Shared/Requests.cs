@@ -24,8 +24,21 @@ public record GetCourseByIdRequest(int Id) : IRequest<GetByIdCourseView>;
 public record DeleteCourseByIdRequest(int Id) : IRequest;
 
 [UsedImplicitly]
-public record GetByIdCourseView(int Id, string Name, TimeSpan Duration, string[]? Categories, bool IsHighDefinition,
+public record GetByIdCourseView(int Id, string Name, string Duration, string[]? Categories, bool IsHighDefinition,
     string? Author, string? Platform, string Path, string Host, GetByIdCourseEntryView[] Entries);
 
 [UsedImplicitly]
-public record GetByIdCourseEntryView(int Id, string Name, TimeSpan Duration, int SequenceNumber, string? Section);
+public record GetByIdCourseEntryView(int Id, string Name, string Duration, int SequenceNumber, string? Section);
+
+[UsedImplicitly]
+public record GetWatchedRequest(int CourseId) : IRequest<GetWatchedResponse>;
+
+[UsedImplicitly]
+public record GetWatchedResponse(int WatchedCount, string WatchedDuration, decimal Progress, GetWatchedResponseEntryView[] WatchedEntries);
+
+[UsedImplicitly]
+public record GetWatchedResponseEntryView(int Id);
+
+public record SetWatchedRequest(int CourseId, int CourseEntryId) : IRequest<Unit>;
+
+public record DeletedWatchedRequest(int CourseId, int CourseEntryId) : IRequest<Unit>;

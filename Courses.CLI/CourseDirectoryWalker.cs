@@ -33,14 +33,12 @@ internal class CourseDirectoryWalker : IEnumerable<FileSystemInfo>
                 yield return file;
             }
 
-
         if (hasFilesInDirectory) yield break;
 
         var directories = _path.EnumerateDirectories().ToList();
         directories.Sort(new CourseFileSystemEntriesComparer());
 
-        foreach (var directory in directories)
-        foreach (var fileOrDirectory in new CourseDirectoryWalker(directory))
+        foreach (var fileOrDirectory in directories.SelectMany(directory => new CourseDirectoryWalker(directory)))
             yield return fileOrDirectory;
 
         span.End();

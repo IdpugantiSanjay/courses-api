@@ -34,11 +34,7 @@ internal class ListCourses
         HttpResponseMessage? httpResponseMessage = null;
 
         await AnsiConsole.Status()
-            .StartAsync("Loading...", async _ =>
-            {
-                // await Task.Delay(2_000);
-                httpResponseMessage = await getAsyncTask;
-            });
+            .StartAsync("Loading...", async _ => { httpResponseMessage = await getAsyncTask; });
 
         Debug.Assert(httpResponseMessage != null, nameof(httpResponseMessage) + " != null");
 
@@ -50,9 +46,9 @@ internal class ListCourses
 
         Debug.Assert(response != null, nameof(response) + " != null");
 
-        foreach (var course in response.Courses)
+        foreach (var (index, course) in response.Courses.Select((c, i) => (i, c)))
         {
-            Console.Write($"{course.Id}. ");
+            Console.Write($"{index + 1}. ");
             AnsiConsole.Console.WriteLine(course.Name, new Style(Color.Turquoise2));
         }
     }

@@ -11,6 +11,8 @@ public class AppDbContext : DbContext
 
     public DbSet<Course> Courses { get; set; } = null!;
 
+    public DbSet<Watched.Watched> Watched { get; set; } = null!;
+
     public DbSet<CourseEntry> CourseEntries { get; set; } = null!;
 
     public DbSet<Platform> Platforms { get; set; } = null!;
@@ -32,5 +34,7 @@ public class AppDbContext : DbContext
             ;
 
         builder.Entity<CourseEntry>().Property(c => c.Duration).HasConversion<long>();
+
+        // builder.Entity<Watched.Watched>().HasNoKey();
     }
 }

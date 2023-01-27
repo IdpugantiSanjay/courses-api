@@ -2,8 +2,6 @@ using System.Net.Mime;
 using System.Reflection;
 using Courses.API.Controllers;
 using Courses.API.Database;
-using Elastic.Apm.NetCoreAll;
-using Elastic.Apm.SerilogEnricher;
 using Elastic.CommonSchema.Serilog;
 using FluentValidation.AspNetCore;
 using Mapster;
@@ -14,6 +12,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Newtonsoft.Json;
 using Serilog;
+
+// using Elastic.Apm.NetCoreAll;
 
 namespace Courses.API.DependencyInjection;
 
@@ -59,14 +59,14 @@ public static class Configure
                     .Enrich.FromLogContext()
                     .Enrich.WithEnvironmentName()
                     .Enrich.WithMachineName()
-                    .Enrich.WithElasticApmCorrelationInfo()
+                    // .Enrich.WithElasticApmCorrelationInfo()
                     .ReadFrom.Configuration(configuration)
                     .WriteTo.File(new EcsTextFormatter(), configuration.GetValue<string>(ConfigurationKeys.LogToPath),
                         rollingInterval: RollingInterval.Day, flushToDiskInterval: TimeSpan.FromSeconds(5))
                     .WriteTo.Console()
                     ;
             })
-            .UseAllElasticApm()
+            // .UseAllElasticApm()
             ;
     }
 
@@ -90,7 +90,7 @@ public static class Configure
             .AddFluentValidationClientsideAdapters()
             .AddMediatR(typeof(CoursesController))
             .AddHealthChecks()
-            .AddElasticsearch(configValues.ElasticSearchConnectionString)
+            // .AddElasticsearch(configValues.ElasticSearchConnectionString)
             .AddNpgSql(configValues.NpgSqlConnectionString)
             ;
 

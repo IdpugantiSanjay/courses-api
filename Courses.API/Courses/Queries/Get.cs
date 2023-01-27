@@ -19,8 +19,8 @@ public class GetCoursesHandler : IRequestHandler<GetCoursesRequest, GetCoursesRe
     {
         var query =
                 _context.Courses
-                    .Include(c => c.Author)
-                    .Include(c => c.Platform)
+            // .Include(c => c.Author)
+            // .Include(c => c.Platform)
             ;
 
         var courses = await query.ProjectToType<GetCourseView>().ToArrayAsync(cancellationToken);

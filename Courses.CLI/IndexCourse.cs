@@ -34,7 +34,6 @@ internal class IndexCourse
         var api = _configuration.GetValue<string>("BackendApi");
         var host = _configuration.GetValue<string>("HostMachine");
 
-
         if (string.IsNullOrWhiteSpace(host))
         {
             _logger.LogCritical("Host name not provided");
@@ -53,11 +52,15 @@ internal class IndexCourse
                 HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
         };
 
-
         var backendUri = new Uri(api);
 
         var http = new HttpClient(handler) { BaseAddress = backendUri };
 
+        if (!await IsBackendAvailable())
+        {
+            _logger.LogError("Couldn't connect to backend api: {BackendUri}", backendUri);
+            return;
+        }
 
         var walker = new CourseDirectoryWalker(path);
         var totalDuration = TimeSpan.Zero;
@@ -96,7 +99,6 @@ internal class IndexCourse
 
         if (entriesArray.Length == 0) return;
 
-
         var isCourseHd = decimal.Divide(hdVideosCount, entriesArray.Length) * 100 > 50;
 
         if (!path.Name.Contains(FormatTimeSpan(totalDuration)))
@@ -109,12 +111,6 @@ internal class IndexCourse
         var createCourseRequest =
             new CreateCourseRequest(path.Name, totalDuration, categories, isCourseHd, author, platform, path.FullName,
                 host, entriesArray);
-
-        if (!await IsBackendAvailable())
-        {
-            _logger.LogError("Couldn't connect to backend api: {BackendUri}", backendUri);
-            return;
-        }
 
         var postAsyncTask = http.PostAsJsonAsync("api/Courses", createCourseRequest);
         HttpResponseMessage? httpResponseMessage = null;

@@ -30,7 +30,8 @@ public class CoursesController : ControllerBase
     [HttpGet("{id:int}")]
     public async Task<IActionResult> Get(int id)
     {
-        return Ok(await _mediator.Send(new GetCourseByIdRequest(id)));
+        var @return = await _mediator.Send(new GetCourseByIdRequest(id));
+        return Ok(@return);
     }
 
     [HttpDelete("{id:int}")]
@@ -38,4 +39,10 @@ public class CoursesController : ControllerBase
     {
         return Ok(await _mediator.Send(new DeleteCourseByIdRequest(id)));
     }
+
+    // [HttpPost("{id:int}/{entryId:int}:watched")]
+    // public async Task<IActionResult> SetWatched(int id, int entryId)
+    // {
+    //     
+    // }
 }
