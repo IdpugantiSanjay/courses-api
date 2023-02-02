@@ -1,6 +1,5 @@
 using Courses.API.Database;
 using Courses.Shared;
-using Mapster;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,13 +16,23 @@ public class GetCoursesHandler : IRequestHandler<GetCoursesRequest, GetCoursesRe
 
     public async Task<GetCoursesResponse> Handle(GetCoursesRequest request, CancellationToken cancellationToken)
     {
-        var query =
-                _context.Courses
-            // .Include(c => c.Author)
-            // .Include(c => c.Platform)
-            ;
+        var courses =
+            await _context.Courses
+                .Include(c => c.WatchHistory)
+                .ThenInclude(wh => wh.Entry)
+                .ToArrayAsync(cancellationToken);
+        ;
 
-        var courses = await query.ProjectToType<GetCourseView>().ToArrayAsync(cancellationToken);
-        return new GetCoursesResponse(courses);
+        var courseViews = from course in courses
+            let watchedDuration = course.WatchHistory.Select(w => w.Entry).Sum(x => x.Duration.Ticks)
+            let progress = decimal.Divide(watchedDuration, course.Duration.Ticks) * 100
+            select new GetCourseView(course.Id, course.Name, FormatDuration(course.Duration), Array.Empty<string>(), false, progress);
+
+        string FormatDuration(TimeSpan duration)
+        {
+            return duration.ToString(duration.TotalHours >= 1 ? "h'h 'm'm'" : "m'm'");
+        }
+
+        return new GetCoursesResponse(courseViews.ToArray());
     }
 }

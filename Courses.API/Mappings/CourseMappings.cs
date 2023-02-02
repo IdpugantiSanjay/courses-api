@@ -12,8 +12,9 @@ public class CourseMappings : IRegister
             // .Map(view => view.Duration, c => c.Duration.TotalHours > 1 ? $"{c.Duration.TotalHours}h" : $"{c.Duration.Minutes}m")
             // .Map(view => view.Duration, c => c.Duration.ToString("h'h 'm'm 's's'"))
             .Map(view => view.Duration, c => c.Duration.ToString("h'h 'm'm'"))
-            .Map(view => view.Author, c => c.Author.Name)
-            .Map(view => view.Platform, c => c.Platform.Name)
+            // .Map(view => view.Progress, c => c.WatchHistory)
+            // .Map(view => view.Author, c => c.Author.Name)
+            // .Map(view => view.Platform, c => c.Platform.Name)    
             ;
 
         config.NewConfig<Course, GetByIdCourseView>()
@@ -28,7 +29,7 @@ public class CourseMappings : IRegister
             .Map(dest => dest.Duration, s => $"{Math.Round(s.Duration.TotalMinutes)}m")
             ;
 
-        config.NewConfig<Watched.Watched, GetWatchedResponseEntryView>()
+        config.NewConfig<WatchHistory.WatchHistory, GetWatchedResponseEntryView>()
             .Map(dest => dest.Id, s => s.EntryId);
     }
 }

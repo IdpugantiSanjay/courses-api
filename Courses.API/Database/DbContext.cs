@@ -11,7 +11,7 @@ public class AppDbContext : DbContext
 
     public DbSet<Course> Courses { get; set; } = null!;
 
-    public DbSet<Watched.Watched> Watched { get; set; } = null!;
+    public DbSet<WatchHistory.WatchHistory> Watched { get; set; } = null!;
 
     public DbSet<CourseEntry> CourseEntries { get; set; } = null!;
 
@@ -27,6 +27,8 @@ public class AppDbContext : DbContext
             .Property(c => c.Duration)
             .HasConversion<long>()
             ;
+
+        // builder.Entity<Course>().HasOne(c => c.WatchHistory).WithMany(wh => wh.Course)
 
         builder.Entity<Course>()
             .HasIndex(c => c.Name)

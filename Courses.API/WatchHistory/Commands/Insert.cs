@@ -2,7 +2,7 @@ using Courses.API.Database;
 using Courses.Shared;
 using MediatR;
 
-namespace Courses.API.Watched.Commands;
+namespace Courses.API.WatchHistory.Commands;
 
 public class Insert : IRequestHandler<SetWatchedRequest, Unit>
 {
@@ -15,7 +15,7 @@ public class Insert : IRequestHandler<SetWatchedRequest, Unit>
 
     public async Task<Unit> Handle(SetWatchedRequest request, CancellationToken cancellationToken)
     {
-        _context.Watched.Add(new Watched { CourseId = request.CourseId, EntryId = request.CourseEntryId, CreatedAt = DateTimeOffset.UtcNow });
+        _context.Watched.Add(new WatchHistory { CourseId = request.CourseId, EntryId = request.CourseEntryId, CreatedAt = DateTimeOffset.UtcNow });
         await _context.SaveChangesAsync(cancellationToken);
         return Unit.Value;
     }

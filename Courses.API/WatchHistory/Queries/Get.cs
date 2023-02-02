@@ -4,7 +4,7 @@ using Mapster;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
-namespace Courses.API.Watched.Queries;
+namespace Courses.API.WatchHistory.Queries;
 
 public class Get : IRequestHandler<GetWatchedRequest, GetWatchedResponse>
 {

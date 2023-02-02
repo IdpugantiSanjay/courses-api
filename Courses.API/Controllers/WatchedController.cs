@@ -38,4 +38,7 @@ public class WatchedController : ControllerBase
         var @return = await _mediator.Send(new DeletedWatchedRequest(courseId, entryId));
         return Ok(@return);
     }
+
+    // [Route("{courseId:int}")]
+    // [HttpGet]
 }

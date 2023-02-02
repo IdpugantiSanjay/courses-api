@@ -17,7 +17,7 @@ namespace Courses.API.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "6.0.8")
+                .HasAnnotation("ProductVersion", "7.0.2")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -141,7 +141,7 @@ namespace Courses.API.Migrations
                     b.ToTable("Platforms");
                 });
 
-            modelBuilder.Entity("Courses.API.Watched.Watched", b =>
+            modelBuilder.Entity("Courses.API.WatchHistory.WatchHistory", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -159,6 +159,8 @@ namespace Courses.API.Migrations
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CourseId");
 
                     b.HasIndex("EntryId");
 
@@ -189,13 +191,21 @@ namespace Courses.API.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Courses.API.Watched.Watched", b =>
+            modelBuilder.Entity("Courses.API.WatchHistory.WatchHistory", b =>
                 {
+                    b.HasOne("Courses.API.Courses.Course", "Course")
+                        .WithMany("WatchHistoryList")
+                        .HasForeignKey("CourseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("Courses.API.Courses.CourseEntry", "Entry")
                         .WithMany()
                         .HasForeignKey("EntryId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Course");
 
                     b.Navigation("Entry");
                 });
@@ -203,6 +213,8 @@ namespace Courses.API.Migrations
             modelBuilder.Entity("Courses.API.Courses.Course", b =>
                 {
                     b.Navigation("Entries");
+
+                    b.Navigation("WatchHistoryList");
                 });
 #pragma warning restore 612, 618
         }

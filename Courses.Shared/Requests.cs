@@ -16,8 +16,9 @@ public record GetCoursesRequest : IRequest<GetCoursesResponse>, IRequest<Unit>;
 public record GetCoursesResponse(GetCourseView[] Courses);
 
 [UsedImplicitly]
-public record GetCourseView(int Id, string Name, string Duration, string[]? Categories, bool IsHighDefinition,
-    string? Author, string? Platform);
+public record GetCourseView(int Id, string Name, string Duration, string[]? Categories, bool IsHighDefinition, decimal Progress);
+
+// public record ProgressInfo(int WatchedCount, string WatchedDuration, decimal Progress);
 
 public record GetCourseByIdRequest(int Id) : IRequest<GetByIdCourseView>;
 

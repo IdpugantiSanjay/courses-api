@@ -3,7 +3,7 @@ using Courses.Shared;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
-namespace Courses.API.Watched.Commands;
+namespace Courses.API.WatchHistory.Commands;
 
 public class Delete : IRequestHandler<DeletedWatchedRequest, Unit>
 {

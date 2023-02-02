@@ -24,4 +24,6 @@ public class Course
     public Platform? Platform { get; set; } = null!;
 
     public List<CourseEntry> Entries { get; set; } = new();
+
+    public List<WatchHistory.WatchHistory> WatchHistory { get; set; } = null!;
 }
