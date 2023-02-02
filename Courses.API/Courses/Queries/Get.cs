@@ -30,7 +30,7 @@ public class GetCoursesHandler : IRequestHandler<GetCoursesRequest, GetCoursesRe
 
         string FormatDuration(TimeSpan duration)
         {
-            return duration.ToString(duration.TotalHours >= 1 ? "h'h 'm'm'" : "m'm'");
+            return duration.TotalHours > 24 ? $"{Math.Round(duration.TotalHours)}h" : duration.ToString(duration.TotalHours >= 1 ? "h'h 'm'm'" : "m'm'");
         }
 
         return new GetCoursesResponse(courseViews.ToArray());
