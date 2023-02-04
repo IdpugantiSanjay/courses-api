@@ -19,6 +19,8 @@ public class AppDbContext : DbContext
 
     public DbSet<Author> Authors { get; set; } = null!;
 
+    public DbSet<Notes.Notes> Notes { get; set; } = null!;
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -28,15 +30,14 @@ public class AppDbContext : DbContext
             .HasConversion<long>()
             ;
 
-        // builder.Entity<Course>().HasOne(c => c.WatchHistory).WithMany(wh => wh.Course)
-
         builder.Entity<Course>()
             .HasIndex(c => c.Name)
             .IsUnique()
             ;
 
         builder.Entity<CourseEntry>().Property(c => c.Duration).HasConversion<long>();
+        builder.Entity<Notes.Notes>().Property(c => c.Note).HasMaxLength(4096);
 
-        // builder.Entity<Watched.Watched>().HasNoKey();
+        builder.Entity<Notes.Notes>().HasIndex(x => new { x.EntryId, x.CourseId }).IsUnique();
     }
 }

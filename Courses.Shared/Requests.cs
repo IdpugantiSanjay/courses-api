@@ -29,7 +29,7 @@ public record GetByIdCourseView(int Id, string Name, string Duration, string[]? 
     string? Author, string? Platform, string Path, string Host, GetByIdCourseEntryView[] Entries);
 
 [UsedImplicitly]
-public record GetByIdCourseEntryView(int Id, string Name, string Duration, int SequenceNumber, string? Section);
+public record GetByIdCourseEntryView(int Id, string Name, string Duration, int SequenceNumber, string? Section, bool HasNotes);
 
 [UsedImplicitly]
 public record GetWatchedRequest(int CourseId) : IRequest<GetWatchedResponse>;

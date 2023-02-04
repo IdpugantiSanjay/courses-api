@@ -27,7 +27,7 @@ public class Program
 
         app.ConfigureHttpPipeline();
 
-        app.UseHttpsRedirection();
+        // app.UseHttpsRedirection();
 
         app.UseAuthorization();
 

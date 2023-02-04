@@ -14,4 +14,6 @@ public class CourseEntry
     public TimeSpan Duration { get; set; }
 
     [StringLength(128)] public string? Section { get; set; }
+
+    public Notes.Notes? Notes { get; set; }
 }
