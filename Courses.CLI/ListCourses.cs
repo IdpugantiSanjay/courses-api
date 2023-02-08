@@ -46,9 +46,9 @@ internal class ListCourses
 
         Debug.Assert(response != null, nameof(response) + " != null");
 
-        foreach (var (index, course) in response.Courses.Select((c, i) => (i, c)))
+        foreach (var course in response.Courses)
         {
-            Console.Write($"{index + 1}. ");
+            Console.Write($"{course.Id}. ");
             AnsiConsole.Console.WriteLine(course.Name, new Style(Color.Turquoise2));
         }
     }
