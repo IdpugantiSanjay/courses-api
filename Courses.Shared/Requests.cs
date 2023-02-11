@@ -16,7 +16,7 @@ public record GetCoursesRequest : IRequest<GetCoursesResponse>, IRequest<Unit>;
 public record GetCoursesResponse(GetCourseView[] Courses);
 
 [UsedImplicitly]
-public record GetCourseView(int Id, string Name, string Duration, string[]? Categories, bool IsHighDefinition, decimal Progress);
+public record GetCourseView(int Id, string Name, string Duration, string[]? Categories, bool IsHighDefinition, decimal Progress, string[] Tags);
 
 // public record ProgressInfo(int WatchedCount, string WatchedDuration, decimal Progress);
 
@@ -26,7 +26,7 @@ public record DeleteCourseByIdRequest(int Id) : IRequest;
 
 [UsedImplicitly]
 public record GetByIdCourseView(int Id, string Name, string Duration, string[]? Categories, bool IsHighDefinition,
-    string? Author, string? Platform, string Path, string Host, GetByIdCourseEntryView[] Entries);
+    string? Author, string? Platform, string Path, string Host, GetByIdCourseEntryView[] Entries, string[] Tags);
 
 [UsedImplicitly]
 public record GetByIdCourseEntryView(int Id, string Name, string Duration, int SequenceNumber, string? Section, bool HasNotes);

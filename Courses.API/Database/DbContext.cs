@@ -21,6 +21,8 @@ public class AppDbContext : DbContext
 
     public DbSet<Notes.Notes> Notes { get; set; } = null!;
 
+    public DbSet<Tag> Tags { get; set; } = null!;
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -39,5 +41,20 @@ public class AppDbContext : DbContext
         builder.Entity<Notes.Notes>().Property(c => c.Note).HasMaxLength(4096);
 
         builder.Entity<Notes.Notes>().HasIndex(x => new { x.EntryId, x.CourseId }).IsUnique();
+
+        var id = 1;
+        builder.Entity<Tag>().HasData(new List<Tag>
+        {
+            new() { Id = id++, Name = ".NET" },
+            new() { Id = id++, Name = "JavaScript" },
+            new() { Id = id++, Name = "Web" },
+            new() { Id = id++, Name = "CSS" },
+            new() { Id = id++, Name = "Database" },
+            new() { Id = id++, Name = "AWS" },
+            new() { Id = id++, Name = "Security" },
+            new() { Id = id++, Name = "Git" },
+            new() { Id = id++, Name = "GitHub" },
+            new() { Id = id, Name = "Docker" }
+        });
     }
 }

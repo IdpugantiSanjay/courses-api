@@ -25,6 +25,7 @@ public class CourseMappings : IRegister
             .Map(view => view.Duration,
                 c => c.Duration.TotalHours > 24 ? $"{Math.Round(c.Duration.TotalHours)}h" :
                     c.Duration.TotalHours < 1 ? c.Duration.ToString("m'm'") : c.Duration.ToString("h'h 'm'm'"))
+            .Map(view => view.Tags, c => c.Tags.Select(t => t.Name).ToArray())
             ;
 
         config.NewConfig<CourseEntry, GetByIdCourseEntryView>()

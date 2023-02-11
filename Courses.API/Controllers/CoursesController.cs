@@ -1,3 +1,4 @@
+using Courses.API.Courses.Commands;
 using Courses.Shared;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -40,6 +41,12 @@ public class CoursesController : ControllerBase
         return Ok(await _mediator.Send(new DeleteCourseByIdRequest(id)));
     }
 
+    [HttpPatch("{id:int}")]
+    public async Task<IActionResult> Update(Update.Request request)
+    {
+        var @return = await _mediator.Send(request);
+        return Ok(@return);
+    }
     // [HttpPost("{id:int}/{entryId:int}:watched")]
     // public async Task<IActionResult> SetWatched(int id, int entryId)
     // {

@@ -26,4 +26,6 @@ public class Course
     public List<CourseEntry> Entries { get; set; } = new();
 
     public List<WatchHistory.WatchHistory> WatchHistory { get; set; } = null!;
+
+    public List<Tag> Tags { get; set; } = null!;
 }

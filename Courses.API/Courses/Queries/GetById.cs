@@ -22,6 +22,7 @@ public class GetCourseByIdHandler : IRequestHandler<GetCourseByIdRequest, GetByI
         var query = _context.Courses
                 .Where(c => c.Id == request.Id)
                 .Include(c => c.Entries)
+                .Include(c => c.Tags)
             // .Include(c => c.Author)
             // .Include(c => c.Platform)
             ;
