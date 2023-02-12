@@ -44,6 +44,7 @@ public class Program
                 s.AddSingleton<ListCourses>();
                 s.AddSingleton<DeleteCourse>();
                 s.AddSingleton<GetCourse>();
+                s.AddSingleton<Playlist>();
             })
             .Build();
 
@@ -52,20 +53,25 @@ public class Program
         var listCommand = new Command("list");
         var deleteCommand = new Command("delete");
         var getCommand = new Command("get");
+        var playlistCommand = new Command("playlist");
 
         rootCommand.AddCommand(addCommand);
         rootCommand.AddCommand(listCommand);
         rootCommand.AddCommand(deleteCommand);
         rootCommand.AddCommand(getCommand);
+        rootCommand.AddCommand(playlistCommand);
 
         var path = new Argument<DirectoryInfo>(
             "path",
             "course path");
 
-        var idArgument = new Argument<int>("id");
+        var playlistId = new Argument<string>("id", "Id of youtube playlist");
+
         var author = new Option<string>("--author", () => string.Empty);
         var categories = new Option<string[]>("--categories", Array.Empty<string>);
         var platform = new Option<string>("--platform", () => string.Empty);
+
+        playlistCommand.AddArgument(playlistId);
 
         addCommand.AddArgument(path);
         addCommand.AddOption(author);
@@ -76,6 +82,7 @@ public class Program
         listCommand.AddOption(categories);
         listCommand.AddOption(platform);
 
+        var idArgument = new Argument<int>("id");
         getCommand.AddArgument(idArgument);
         deleteCommand.AddArgument(idArgument);
 
@@ -86,6 +93,12 @@ public class Program
             var cleaned = cleaner.Clean(pathInput);
             await ingest.Ingest(cleaned, authorInput, platformInput, categoriesInput);
         }, path, author, platform, categories);
+
+        playlistCommand.SetHandler(async playlistIdInput =>
+        {
+            var playlist = host.Services.GetService<Playlist>()!;
+            await playlist.Index(playlistIdInput, CancellationToken.None);
+        }, playlistId);
 
         addCommand.AddValidator(r =>
         {

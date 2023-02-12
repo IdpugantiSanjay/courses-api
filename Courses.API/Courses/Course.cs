@@ -14,9 +14,11 @@ public class Course
 
     public bool IsHighDefinition { get; set; }
 
-    [StringLength(512)] public string Path { get; set; } = null!;
+    public string? PlaylistId { get; set; }
 
-    [StringLength(64)] public string Host { get; set; } = null!;
+    [StringLength(512)] public string? Path { get; set; } = null!;
+
+    [StringLength(64)] public string? Host { get; set; } = null!;
 
     //# Entity Framework
     public Author? Author { get; set; } = null!;

@@ -8,6 +8,8 @@ public class CourseEntry
 
     public int CourseId { get; set; }
 
+    public string? VideoId { get; set; }
+
     public int SequenceNumber { get; set; }
 
     [StringLength(128)] public string Name { get; set; } = null!;

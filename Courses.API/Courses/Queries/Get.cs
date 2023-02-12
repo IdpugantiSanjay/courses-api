@@ -26,7 +26,8 @@ public class GetCoursesHandler : IRequestHandler<GetCoursesRequest, GetCoursesRe
         var courseViews = from course in courses
             let watchedDuration = course.WatchHistory.Select(w => w.Entry).Sum(x => x.Duration.Ticks)
             let progress = decimal.Divide(watchedDuration, course.Duration.Ticks) * 100
-            select new GetCourseView(course.Id, course.Name, FormatDuration(course.Duration), Array.Empty<string>(), course.IsHighDefinition, progress);
+            select new GetCourseView(course.Id, course.Name, FormatDuration(course.Duration), Array.Empty<string>(), course.IsHighDefinition, progress,
+                course.PlaylistId);
 
         string FormatDuration(TimeSpan duration)
         {

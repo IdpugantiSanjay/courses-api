@@ -21,6 +21,12 @@ public class CoursesController : ControllerBase
         return Ok(await _mediator.Send(request));
     }
 
+    [HttpPost(":playlist")]
+    public async Task<IActionResult> CreateFromYoutubePlaylist(CreateCourseFromPlaylistRequest request)
+    {
+        return Ok(await _mediator.Send(request));
+    }
+
     [HttpGet]
     public async Task<IActionResult> Get(string? q)
     {
@@ -39,10 +45,4 @@ public class CoursesController : ControllerBase
     {
         return Ok(await _mediator.Send(new DeleteCourseByIdRequest(id)));
     }
-
-    // [HttpPost("{id:int}/{entryId:int}:watched")]
-    // public async Task<IActionResult> SetWatched(int id, int entryId)
-    // {
-    //     
-    // }
 }

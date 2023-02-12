@@ -34,7 +34,47 @@ public class CreateCourseRequestEntryValidator : AbstractValidator<CreateCourseR
 }
 
 [UsedImplicitly]
-public class CreateCourseHandler : IRequestHandler<CreateCourseRequest>
+public class CreateCourseFromPlaylistRequestValidator : AbstractValidator<CreateCourseFromPlaylistRequest>
+{
+    public CreateCourseFromPlaylistRequestValidator()
+    {
+        RuleFor(c => c.Name).MaximumLength(64);
+        RuleFor(c => c.Duration).GreaterThan(TimeSpan.FromMinutes(1)).LessThan(TimeSpan.FromDays(5));
+        RuleFor(c => c.PlaylistId).NotEmpty();
+
+        RuleFor(c => c.Entries.Length).GreaterThan(0);
+        RuleForEach(c => c.Entries).SetValidator(new CreateCourseRequestFromPlaylistEntryValidator());
+    }
+}
+
+[UsedImplicitly]
+public class CreateCourseRequestFromPlaylistEntryValidator : AbstractValidator<CreateCourseFromPlaylistRequestEntry>
+{
+    public CreateCourseRequestFromPlaylistEntryValidator()
+    {
+        RuleFor(c => c.Name).MaximumLength(128);
+        RuleFor(c => c.Duration).GreaterThan(TimeSpan.FromSeconds(1)).LessThan(TimeSpan.FromDays(5));
+        RuleFor(c => c.VideoId).NotEmpty();
+    }
+}
+
+//
+// [UsedImplicitly]
+// public class CreateCourseFromPlaylistRequestEntryValidator : AbstractValidator<CreateCourseFromPlaylistRequest>
+// {
+//     public CreateCourseFromPlaylistRequestEntryValidator()
+//     {
+//         RuleFor(c => c.Name).MaximumLength(128);
+//         RuleFor(c => c.Duration).GreaterThan(TimeSpan.FromSeconds(1)).LessThan(TimeSpan.FromDays(5));
+//         RuleFor(c => c.Entries).NotNull().NotEmpty();
+//         RuleFor(c => c.Entries.Length).GreaterThan(0);
+//         
+//         
+//     }
+// }
+
+[UsedImplicitly]
+public class CreateCourseHandler : IRequestHandler<CreateCourseRequest>, IRequestHandler<CreateCourseFromPlaylistRequest>
 {
     private readonly AppDbContext _context;
     private readonly ILogger<IRequestHandler<CreateCourseRequest>> _logger;
@@ -43,6 +83,30 @@ public class CreateCourseHandler : IRequestHandler<CreateCourseRequest>
     {
         _context = context;
         _logger = logger;
+    }
+
+    public async Task<Unit> Handle(CreateCourseFromPlaylistRequest request, CancellationToken cancellationToken)
+    {
+        var course = new Course
+        {
+            Duration = request.Duration,
+            Categories = request.Categories,
+            Name = request.Name,
+            IsHighDefinition = request.IsHighDefinition,
+            PlaylistId = request.PlaylistId,
+            Entries = request.Entries.Select(e => new CourseEntry
+            {
+                Duration = e.Duration,
+                Name = e.Name,
+                SequenceNumber = e.SequenceNumber,
+                VideoId = e.VideoId
+            }).ToList()
+        };
+
+        _context.Courses.Add(course);
+        await _context.SaveChangesAsync(cancellationToken);
+        _logger.LogInformation("Added Course: {Name} to Database", course.Name);
+        return await Unit.Task;
     }
 
     public async Task<Unit> Handle(CreateCourseRequest request, CancellationToken cancellationToken)
@@ -71,7 +135,6 @@ public class CreateCourseHandler : IRequestHandler<CreateCourseRequest>
             }
         }
 
-
         var course = new Course
         {
             Author = author,
@@ -92,7 +155,6 @@ public class CreateCourseHandler : IRequestHandler<CreateCourseRequest>
         };
 
         _context.Courses.Add(course);
-
 
         await _context.SaveChangesAsync(cancellationToken);
         _logger.LogInformation("Added Course: {Name} to Database", course.Name);
