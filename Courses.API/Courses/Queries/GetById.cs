@@ -1,9 +1,9 @@
 using Courses.API.Database;
 using Courses.Shared;
 using JetBrains.Annotations;
-using Mapster;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using static Courses.API.Courses.Functions;
 
 namespace Courses.API.Courses.Queries;
 
@@ -22,11 +22,14 @@ public class GetCourseByIdHandler : IRequestHandler<GetCourseByIdRequest, GetByI
         var query = _context.Courses
                 .Where(c => c.Id == request.Id)
                 .Include(c => c.Entries)
-            // .Include(c => c.Author)
-            // .Include(c => c.Platform)
             ;
 
         var result = await query.FirstAsync(cancellationToken);
-        return result.Adapt<GetByIdCourseView>();
+
+        var entries =
+            result.Entries.Select(e => new GetByIdCourseEntryView(e.Id, e.Name, FormatDuration(e.Duration), e.SequenceNumber, e.Section, false, e.VideoId));
+
+        return new GetByIdCourseView(result.Id, result.Name, FormatDuration(result.Duration), Array.Empty<string>(), result.IsHighDefinition, result.PlaylistId,
+            entries.ToArray());
     }
 }

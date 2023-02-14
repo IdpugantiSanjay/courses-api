@@ -30,8 +30,8 @@ public record GetCourseByIdRequest(int Id) : IRequest<GetByIdCourseView>;
 public record DeleteCourseByIdRequest(int Id) : IRequest;
 
 [UsedImplicitly]
-public record GetByIdCourseView(int Id, string Name, string Duration, string[]? Categories, bool IsHighDefinition,
-    string? Author, string? Platform, string? Path, string? Host, string? PlaylistId, GetByIdCourseEntryView[] Entries);
+public record GetByIdCourseView(int Id, string Name, string Duration, string[]? Categories, bool IsHighDefinition, string? PlaylistId,
+    GetByIdCourseEntryView[] Entries);
 
 [UsedImplicitly]
 public record GetByIdCourseEntryView(int Id, string Name, string Duration, int SequenceNumber, string? Section, bool HasNotes, string? VideoId);
@@ -40,7 +40,7 @@ public record GetByIdCourseEntryView(int Id, string Name, string Duration, int S
 public record GetWatchedRequest(int CourseId) : IRequest<GetWatchedResponse>;
 
 [UsedImplicitly]
-public record GetWatchedResponse(int WatchedCount, string WatchedDuration, decimal Progress, GetWatchedResponseEntryView[] WatchedEntries);
+public record GetWatchedResponse(int WatchedCount, string WatchedDuration, decimal Progress, string DurationLeft, GetWatchedResponseEntryView[] WatchedEntries);
 
 [UsedImplicitly]
 public record GetWatchedResponseEntryView(int Id);

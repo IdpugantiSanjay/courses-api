@@ -17,15 +17,20 @@ public class CourseMappings : IRegister
             // .Map(view => view.Platform, c => c.Platform.Name)    
             ;
 
-        config.NewConfig<Course, GetByIdCourseView>()
-            .Map(dest => dest.Author, c => c.Author)
-            .Map(dest => dest.Platform, c => c.Platform)
-            // .Map(dest => dest.Duration, c => c.Duration.TotalHours > 1 ? $"{c.Duration.TotalHours}h" : $"{c.Duration.Minutes}m")
-            // .Map(view => view.Duration, c => c.Duration.ToString("h'h 'm'm 's's'"))
-            .Map(view => view.Duration,
-                c => c.Duration.TotalHours > 24 ? $"{Math.Round(c.Duration.TotalHours)}h" :
-                    c.Duration.TotalHours < 1 ? c.Duration.ToString("m'm'") : c.Duration.ToString("h'h 'm'm'"))
-            ;
+        // config.NewConfig<Course, GetByIdCourseView>()
+        //     // .Map(dest => dest.Author, c => c.Author)
+        //     // .Map(dest => dest.Platform, c => c.Platform)
+        //     // .Map(dest => dest.Duration, c => c.Duration.TotalHours > 1 ? $"{c.Duration.TotalHours}h" : $"{c.Duration.Minutes}m")
+        //     // .Map(view => view.Duration, c => c.Duration.ToString("h'h 'm'm 's's'"))
+        //     .Map(view => view.Duration,
+        //         c => c.Duration.TotalHours > 24 ? $"{Math.Round(c.Duration.TotalHours)}h" :
+        //             c.Duration.TotalHours < 1 ? c.Duration.ToString("m'm'") : c.Duration.ToString("h'h 'm'm'"))
+        //     .Map(view => view.RemainingDuration, c =>
+        //     {
+        //         var durationLeft = c.Duration - c.Entries.Aggregate(TimeSpan.Zero, (curr, acc) => curr + acc.Duration);
+        //         return string.Empty;
+        //     })
+        //     ;
 
         config.NewConfig<CourseEntry, GetByIdCourseEntryView>()
             .Map(dest => dest.Duration, s => $"{Math.Round(s.Duration.TotalMinutes)}m")

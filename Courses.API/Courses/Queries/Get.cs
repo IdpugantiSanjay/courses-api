@@ -2,6 +2,7 @@ using Courses.API.Database;
 using Courses.Shared;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using static Courses.API.Courses.Functions;
 
 namespace Courses.API.Courses.Queries;
 
@@ -28,11 +29,6 @@ public class GetCoursesHandler : IRequestHandler<GetCoursesRequest, GetCoursesRe
             let progress = decimal.Divide(watchedDuration, course.Duration.Ticks) * 100
             select new GetCourseView(course.Id, course.Name, FormatDuration(course.Duration), Array.Empty<string>(), course.IsHighDefinition, progress,
                 course.PlaylistId);
-
-        string FormatDuration(TimeSpan duration)
-        {
-            return duration.TotalHours > 24 ? $"{Math.Round(duration.TotalHours)}h" : duration.ToString(duration.TotalHours >= 1 ? "h'h 'm'm'" : "m'm'");
-        }
 
         return new GetCoursesResponse(courseViews.ToArray());
     }
