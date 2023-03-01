@@ -1,6 +1,7 @@
 using System.Collections;
-using Elastic.Apm;
-using Elastic.Apm.Api;
+
+// using Elastic.Apm;
+// using Elastic.Apm.Api;
 
 namespace Courses.CLI;
 
@@ -16,12 +17,6 @@ internal class CourseDirectoryWalker : IEnumerable<FileSystemInfo>
 
     public IEnumerator<FileSystemInfo> GetEnumerator()
     {
-        var transaction = Agent.Tracer.CurrentTransaction ??
-                          Agent.Tracer.StartTransaction(nameof(CourseDirectoryWalker), ApiConstants.TypeStorage);
-
-        var span = transaction.StartSpan("Read Course Files from Disk", ApiConstants.TypeStorage, "",
-            ApiConstants.ActionQuery);
-
         var hasFilesInDirectory = false;
 
         var files = _path.EnumerateFiles().ToList();
@@ -40,8 +35,6 @@ internal class CourseDirectoryWalker : IEnumerable<FileSystemInfo>
 
         foreach (var fileOrDirectory in directories.SelectMany(directory => new CourseDirectoryWalker(directory)))
             yield return fileOrDirectory;
-
-        span.End();
     }
 
     IEnumerator IEnumerable.GetEnumerator()

@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
+using Serilog.Events;
 
 namespace Courses.CLI;
 
@@ -12,10 +13,7 @@ public class Program
 {
     public static IHostBuilder CreateHostBuilder(string[] args)
     {
-        return Host.CreateDefaultBuilder(args)
-                .UseSerilog()
-            // .UseAllElasticApm()
-            ;
+        return Host.CreateDefaultBuilder().UseSerilog();
     }
 
     public static async Task Main(string[] args)
@@ -30,11 +28,10 @@ public class Program
             {
                 lc.ReadFrom.Configuration(configuration)
                     .Enrich.FromLogContext()
-                    // .Enrich.WithElasticApmCorrelationInfo()
-                    .WriteTo.Console()
-                    .WriteTo.File("/var/log/courses/cli/log.txt", rollingInterval: RollingInterval.Day)
-                    // .WriteTo.Elasticsearch(
-                    //     new ElasticsearchSinkOptions(new Uri(configuration.GetConnectionString("ElasticSearchUrl"))))
+                    .Enrich.WithEnvironmentName()
+                    .Enrich.WithProperty("Project", "Courses.Cli")
+                    .WriteTo.Console(LogEventLevel.Error)
+                    .AuditTo.Seq(configuration.GetConnectionString("Seq")!, apiKey: configuration.GetSection("Seq").GetValue<string>("API_KEY"))
                     ;
             })
             .ConfigureServices(s =>
@@ -45,6 +42,19 @@ public class Program
                 s.AddSingleton<DeleteCourse>();
                 s.AddSingleton<GetCourse>();
                 s.AddSingleton<Playlist>();
+                s.AddSingleton<HttpInterceptor>();
+
+                void ConfigureClient(HttpClient client)
+                {
+                    var api = configuration.GetValue<string>("BackendApi")!;
+                    client.BaseAddress = new Uri($"{api}/api/v1/Courses/");
+                }
+
+                s.AddHttpClient<IndexCourse>(ConfigureClient);
+                s.AddHttpClient<ListCourses>(ConfigureClient);
+                s.AddHttpClient<DeleteCourse>(ConfigureClient);
+                s.AddHttpClient<GetCourse>(ConfigureClient);
+                s.AddHttpClient<Playlist>(ConfigureClient);
             })
             .Build();
 
@@ -65,34 +75,31 @@ public class Program
             "path",
             "course path");
 
+        var categories = new Option<string[]>("--categories", Array.Empty<string>);
         var playlistId = new Argument<string>("id", "Id of youtube playlist");
 
-        var author = new Option<string>("--author", () => string.Empty);
-        var categories = new Option<string[]>("--categories", Array.Empty<string>);
-        var platform = new Option<string>("--platform", () => string.Empty);
+        // var author = new Option<string>("--author", () => string.Empty);
+        //
+        // var platform = new Option<string>("--platform", () => string.Empty);
 
         playlistCommand.AddArgument(playlistId);
 
         addCommand.AddArgument(path);
-        addCommand.AddOption(author);
         addCommand.AddOption(categories);
-        addCommand.AddOption(platform);
 
-        listCommand.AddOption(author);
         listCommand.AddOption(categories);
-        listCommand.AddOption(platform);
 
         var idArgument = new Argument<int>("id");
         getCommand.AddArgument(idArgument);
         deleteCommand.AddArgument(idArgument);
 
-        addCommand.SetHandler(async (pathInput, authorInput, platformInput, categoriesInput) =>
+        addCommand.SetHandler(async (pathInput, categoriesInput) =>
         {
             var ingest = host.Services.GetService<IndexCourse>()!;
             var cleaner = host.Services.GetService<CleanCourseDirectory>()!;
             var cleaned = cleaner.Clean(pathInput);
-            await ingest.Ingest(cleaned, authorInput, platformInput, categoriesInput);
-        }, path, author, platform, categories);
+            await ingest.Ingest(cleaned, categoriesInput);
+        }, path, categories);
 
         playlistCommand.SetHandler(async playlistIdInput =>
         {

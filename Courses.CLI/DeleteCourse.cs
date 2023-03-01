@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Spectre.Console;
 
@@ -7,28 +6,24 @@ namespace Courses.CLI;
 
 public class DeleteCourse
 {
-    private readonly IConfiguration _configuration;
+    private readonly HttpClient _httpClient;
     private readonly ILogger<DeleteCourse> _logger;
 
-    public DeleteCourse(IConfiguration configuration, ILogger<DeleteCourse> logger)
+    public DeleteCourse(ILogger<DeleteCourse> logger, HttpClient httpClient)
     {
-        _configuration = configuration;
         _logger = logger;
+        _httpClient = httpClient;
     }
 
     public async Task Delete(int id)
     {
-        var api = _configuration.GetValue<string>("BackendApi");
-        var backendUri = new Uri(api);
+        var correlationId = Guid.NewGuid().ToString();
+        using var _ = _logger.BeginScope("DELETE course: {Id}. with {CorrelationId}", id, correlationId);
 
-        var handler = new HttpClientHandler
-        {
-            ServerCertificateCustomValidationCallback =
-                HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
-        };
+        var httpRequest = new HttpRequestMessage(HttpMethod.Delete, $"{id}");
+        httpRequest.Headers.Add("x-correlation-id", correlationId);
 
-        var http = new HttpClient(handler) { BaseAddress = backendUri };
-        var deleteAsync = http.DeleteAsync($"api/Courses/{id}");
+        var deleteAsync = _httpClient.SendAsync(httpRequest);
         HttpResponseMessage? httpResponseMessage = null;
 
         await AnsiConsole.Status()

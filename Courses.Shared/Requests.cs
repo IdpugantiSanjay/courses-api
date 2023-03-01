@@ -9,10 +9,10 @@ namespace Courses.Shared;
 public record CreateCourseRequest(string Name, TimeSpan Duration, string[]? Categories, bool IsHighDefinition,
     string? Author, string? Platform, string Path, string Host, CreateCourseRequestEntry[] Entries) : IRequest;
 
+public record CreateCourseRequestEntry(string Name, TimeSpan Duration, int SequenceNumber, string? Section);
+
 public record CreateCourseFromPlaylistRequest(string Name, TimeSpan Duration, string[]? Categories, bool IsHighDefinition, string PlaylistId,
     CreateCourseFromPlaylistRequestEntry[] Entries) : IRequest;
-
-public record CreateCourseRequestEntry(string Name, TimeSpan Duration, int SequenceNumber, string? Section);
 
 public record CreateCourseFromPlaylistRequestEntry(string Name, TimeSpan Duration, int SequenceNumber, string VideoId);
 

@@ -49,3 +49,24 @@ Command to update dotnet-tool in directory Courses.CLI
     dotnet pack
     dotnet tool update --global --add-source ./nupkg courses.cli
 ```
+
+Command to add migration for course module. [SO Link](https://stackoverflow.com/a/39621455)
+```bash
+dotnet ef migrations add <migration-name> -s API -p CourseModule
+```
+
+Command to update database for course module
+```bash
+dotnet ef database update -s API -p CourseModule
+```
+
+Tags:
+1. Documentation
+    XML Comments / Open API
+2. Security
+3. Observability
+4. Developer Experience
+5. Test / Testability
+6. Performance / Scaling
+7. Maintainability / Technical Debt
+8. Cost Optimization

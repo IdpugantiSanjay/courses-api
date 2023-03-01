@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.Net.Http.Json;
-using Courses.Shared;
-using Microsoft.Extensions.Configuration;
+using CourseModule.Contracts;
 using Microsoft.Extensions.Logging;
 using Spectre.Console;
 
@@ -9,44 +8,36 @@ namespace Courses.CLI;
 
 public class GetCourse
 {
-    private readonly IConfiguration _configuration;
+    private readonly HttpClient _httpClient;
     private readonly ILogger<GetCourse> _logger;
 
-    public GetCourse(IConfiguration configuration, ILogger<GetCourse> logger)
+    public GetCourse(ILogger<GetCourse> logger, HttpClient httpClient)
     {
-        _configuration = configuration;
         _logger = logger;
+        _httpClient = httpClient;
     }
 
     public async Task Get(int id)
     {
-        var handler = new HttpClientHandler
-        {
-            ServerCertificateCustomValidationCallback =
-                HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
-        };
+        var correlationId = Guid.NewGuid().ToString();
+        using var _ = _logger.BeginScope("GET course: {Id}. with {CorrelationId}", id, correlationId);
 
-        var api = _configuration.GetValue<string>("BackendApi");
-        var backendUri = new Uri(api);
+        var httpRequest = new HttpRequestMessage(HttpMethod.Get, $"{id}?view={nameof(CourseView.Entries)}");
+        httpRequest.Headers.Add("x-correlation-id", correlationId);
 
-        var http = new HttpClient(handler) { BaseAddress = backendUri };
-        var getAsyncTask = http.GetAsync($"api/Courses/{id}");
+        var getAsyncTask = _httpClient.SendAsync(httpRequest);
         HttpResponseMessage? httpResponseMessage = null;
 
         await AnsiConsole.Status()
-            .StartAsync("Loading...", async _ =>
-            {
-                // await Task.Delay(2_000);
-                httpResponseMessage = await getAsyncTask;
-            });
+            .StartAsync("Loading...", async _ => { httpResponseMessage = await getAsyncTask; });
 
         Debug.Assert(httpResponseMessage != null, nameof(httpResponseMessage) + " != null");
 
         if (!httpResponseMessage.IsSuccessStatusCode)
-            _logger.LogError("Error indexing course, Response: {ErrorResponse}",
+            _logger.LogError("Error fetching course, Response: {ErrorResponse}",
                 await httpResponseMessage.Content.ReadAsStringAsync());
 
-        var response = await httpResponseMessage.Content.ReadFromJsonAsync<GetByIdCourseView>();
+        var response = await httpResponseMessage.Content.ReadFromJsonAsync<CourseResponse.WithEntries>();
 
         Debug.Assert(response != null, nameof(response) + " != null");
 

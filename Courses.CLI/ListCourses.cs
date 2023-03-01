@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Net.Http.Json;
-using Courses.Shared;
-using Microsoft.Extensions.Configuration;
+using Contracts;
+using CourseModule.Contracts;
 using Microsoft.Extensions.Logging;
 using Spectre.Console;
 
@@ -9,28 +9,24 @@ namespace Courses.CLI;
 
 internal class ListCourses
 {
-    private readonly IConfiguration _configuration;
+    private readonly HttpClient _httpClient;
     private readonly ILogger<ListCourses> _logger;
 
-    public ListCourses(IConfiguration configuration, ILogger<ListCourses> logger)
+    public ListCourses(ILogger<ListCourses> logger, HttpClient httpClient)
     {
-        _configuration = configuration;
         _logger = logger;
+        _httpClient = httpClient;
     }
 
     public async Task List()
     {
-        var handler = new HttpClientHandler
-        {
-            ServerCertificateCustomValidationCallback =
-                HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
-        };
+        var correlationId = Guid.NewGuid().ToString();
+        using var _ = _logger.BeginScope("Starting listing courses. {CorrelationId}", correlationId);
 
-        var api = _configuration.GetValue<string>("BackendApi");
-        var backendUri = new Uri(api);
+        var httpRequestMessage = new HttpRequestMessage(HttpMethod.Get, "");
+        httpRequestMessage.Headers.Add("x-correlation-id", correlationId);
 
-        var http = new HttpClient(handler) { BaseAddress = backendUri };
-        var getAsyncTask = http.GetAsync("api/Courses");
+        var getAsyncTask = _httpClient.SendAsync(httpRequestMessage);
         HttpResponseMessage? httpResponseMessage = null;
 
         await AnsiConsole.Status()
@@ -42,11 +38,17 @@ internal class ListCourses
             _logger.LogError("Error indexing course, Response: {ErrorResponse}",
                 await httpResponseMessage.Content.ReadAsStringAsync());
 
-        var response = await httpResponseMessage.Content.ReadFromJsonAsync<GetCoursesResponse>();
+        httpResponseMessage.EnsureSuccessStatusCode();
+
+        _logger.LogInformation("GET request returned with success code");
+
+        var response = await httpResponseMessage.Content.ReadFromJsonAsync<ListResponse<CourseResponse.Default>>();
 
         Debug.Assert(response != null, nameof(response) + " != null");
 
-        foreach (var course in response.Courses)
+        if (response.Items.Length == 0) AnsiConsole.Console.WriteLine("No courses found.", new Style(Color.Yellow));
+
+        foreach (var course in response.Items)
         {
             Console.Write($"{course.Id}. ");
             AnsiConsole.Console.WriteLine(course.Name, new Style(Color.Turquoise2));

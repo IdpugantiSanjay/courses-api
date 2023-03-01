@@ -1,8 +1,8 @@
 using System.Diagnostics;
-using System.Net.Http.Json;
-using Courses.Shared;
+using System.Text;
+using System.Text.Json;
+using CourseModule.Contracts;
 using FFMpegCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Spectre.Console;
 
@@ -13,75 +13,40 @@ namespace Courses.CLI;
 
 internal class IndexCourse
 {
-    private readonly IConfiguration _configuration;
+    private readonly HttpClient _httpClient;
     private readonly ILogger<IndexCourse> _logger;
 
-    public IndexCourse(IConfiguration configuration, ILogger<IndexCourse> logger)
+    public IndexCourse(ILogger<IndexCourse> logger, HttpClient httpClient)
     {
-        _configuration = configuration;
         _logger = logger;
+        _httpClient = httpClient;
     }
 
-    private static async Task<(TimeSpan, bool)> VideoProperties(string filePath)
+    private static async Task<(TimeSpan, bool)> GetVideoProperties(string filePath)
     {
         var mediaAnalysis = await FFProbe.AnalyseAsync(filePath);
         var videoStream = mediaAnalysis.VideoStreams.First();
         return (mediaAnalysis.Duration, videoStream.Width >= 1920);
     }
 
-    public async Task Ingest(DirectoryInfo path, string author, string platform, string[] categories)
+    public async Task Ingest(DirectoryInfo path, string[] categories)
     {
-        var api = _configuration.GetValue<string>("BackendApi");
-        var host = _configuration.GetValue<string>("HostMachine");
-
-        if (string.IsNullOrWhiteSpace(host))
-        {
-            _logger.LogCritical("Host name not provided");
-            return;
-        }
-
-        if (string.IsNullOrWhiteSpace(api) || !Uri.IsWellFormedUriString(api, UriKind.Absolute))
-        {
-            _logger.LogCritical("Invalid BACKEND_API Environment Variable value: {Api}", api);
-            return;
-        }
-
-        var handler = new HttpClientHandler
-        {
-            ServerCertificateCustomValidationCallback =
-                HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
-        };
-
-        var backendUri = new Uri(api);
-
-        var http = new HttpClient(handler) { BaseAddress = backendUri };
-
-        if (!await IsBackendAvailable())
-        {
-            _logger.LogError("Couldn't connect to backend api: {BackendUri}", backendUri);
-            return;
-        }
+        var correlationId = Guid.NewGuid().ToString();
+        var stopWatch = new Stopwatch();
+        using var _ = _logger.BeginScope("Processing {Path}. With {CorrelationId}", path.ToString(), correlationId);
 
         var walker = new CourseDirectoryWalker(path);
         var totalDuration = TimeSpan.Zero;
-        var entries = new List<CreateCourseRequestEntry>();
+        var entries = new List<CreateRequestBody.Default.Entry>();
         var hdVideosCount = 0;
 
         await AnsiConsole.Status().StartAsync("Processing...", async _ =>
         {
+            stopWatch.Start();
             foreach (var (entry, index) in walker.Select((e, index) => (e, index)))
             {
-                // var tracerCurrentTransaction = Agent.Tracer.CurrentTransaction;
-                // var span = tracerCurrentTransaction.StartSpan("Calculate Video File Duration",
-                //     ApiConstants.TypeExternal,
-                //     "",
-                //     ApiConstants.ActionQuery);
-
-                // span.SetLabel("FilePath", entry.FullName);
-                var (entryDuration, isHd) = await VideoProperties(entry.FullName);
+                var (entryDuration, isHd) = await GetVideoProperties(entry.FullName);
                 if (isHd) hdVideosCount++;
-
-                // span.End();
 
                 totalDuration += entryDuration;
                 var section = entry switch
@@ -91,8 +56,15 @@ internal class IndexCourse
                         .Name,
                     _ => string.Empty
                 };
-                entries.Add(new CreateCourseRequestEntry(entry.Name, entryDuration, index + 1, section));
+
+                var defaultEntry = new CreateRequestBody.Default.Entry
+                    { Name = entry.Name, Duration = entryDuration, SequenceNumber = index + 1, Section = section };
+
+                entries.Add(defaultEntry);
             }
+
+            stopWatch.Stop();
+            _logger.LogInformation("Done processing {Path}. Took {@ElapsedTime}", path.ToString(), stopWatch.Elapsed);
         });
 
         var entriesArray = entries.ToArray();
@@ -108,12 +80,22 @@ internal class IndexCourse
             path.MoveTo(moveToPath);
         }
 
-        var createCourseRequest =
-            new CreateCourseRequest(path.Name, totalDuration, categories, isCourseHd, author, platform, path.FullName,
-                host, entriesArray);
+        var body = new CreateRequestBody.Default
+            { Name = path.Name, Duration = totalDuration, Categories = categories, IsHighDefinition = isCourseHd, Entries = entries.ToArray() };
 
-        var postAsyncTask = http.PostAsJsonAsync("api/Courses", createCourseRequest);
+        var json = JsonSerializer.Serialize(body);
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
+        var request = new HttpRequestMessage(HttpMethod.Post, "")
+        {
+            Content = content
+        };
+        request.Headers.Add("x-correlation-id", correlationId);
+
+        _logger.LogInformation("Sending Course contents to API: {@Body}", body);
+        var postAsyncTask = _httpClient.SendAsync(request);
         HttpResponseMessage? httpResponseMessage = null;
+
+        _logger.LogInformation("Making API request to insert {CourseName}", body.Name);
 
         await AnsiConsole.Status()
             .StartAsync("Inserting...", async _ => { httpResponseMessage = await postAsyncTask; });
@@ -125,13 +107,7 @@ internal class IndexCourse
                 await httpResponseMessage.Content.ReadAsStringAsync());
 
         httpResponseMessage.EnsureSuccessStatusCode();
-        _logger.LogDebug("Added {CourseName} into Database", createCourseRequest.Name);
-
-        async Task<bool> IsBackendAvailable()
-        {
-            var healthResponse = await http.GetAsync("/healthz");
-            return healthResponse.IsSuccessStatusCode;
-        }
+        _logger.LogInformation("Added {CourseName} into Database", body.Name);
     }
 
     private static string FormatTimeSpan(TimeSpan timeSpan)

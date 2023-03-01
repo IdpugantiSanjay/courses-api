@@ -1,59 +1,53 @@
 using System.Diagnostics;
-using System.Net.Http.Json;
+using System.Text;
+using System.Text.Json;
 using System.Xml;
-using Courses.Shared;
+using CourseModule.Contracts;
 using Google.Apis.Auth.OAuth2;
+using Google.Apis.Http;
 using Google.Apis.Services;
 using Google.Apis.Util.Store;
 using Google.Apis.YouTube.v3;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Spectre.Console;
 
 namespace Courses.CLI;
 
+internal class HttpInterceptor : IHttpExecuteInterceptor
+{
+    private readonly ILogger<HttpInterceptor> _logger;
+
+    public HttpInterceptor(ILogger<HttpInterceptor> logger)
+    {
+        _logger = logger;
+    }
+
+    public Task InterceptAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        _logger.LogInformation("Sending HTTP request for {Route} {Method} {Headers}", request.RequestUri!.ToString(), request.Method, request.Headers);
+        return Task.CompletedTask;
+        ;
+    }
+}
+
 internal class Playlist
 {
-    private readonly IConfiguration _configuration;
+    private readonly HttpClient _httpClient;
+    private readonly HttpInterceptor _interceptor;
+
     private readonly ILogger<Playlist> _logger;
 
-    public Playlist(IConfiguration configuration, ILogger<Playlist> logger)
+    public Playlist(ILogger<Playlist> logger, HttpClient httpClient, HttpInterceptor interceptor)
     {
-        _configuration = configuration;
         _logger = logger;
+        _httpClient = httpClient;
+        _interceptor = interceptor;
     }
 
     public async Task Index(string playlistId, CancellationToken cancellationToken)
     {
-        var api = _configuration.GetValue<string>("BackendApi");
-
-        if (string.IsNullOrWhiteSpace(api) || !Uri.IsWellFormedUriString(api, UriKind.Absolute))
-        {
-            _logger.LogCritical("Invalid BACKEND_API Environment Variable value: {Api}", api);
-            return;
-        }
-
-        var handler = new HttpClientHandler
-        {
-            ServerCertificateCustomValidationCallback =
-                HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
-        };
-
-        var backendUri = new Uri(api);
-
-        var http = new HttpClient(handler) { BaseAddress = backendUri };
-
-        if (!await IsBackendAvailable())
-        {
-            _logger.LogError("Couldn't connect to backend api: {BackendUri}", backendUri);
-            return;
-        }
-
-        async Task<bool> IsBackendAvailable()
-        {
-            var healthResponse = await http.GetAsync("/healthz");
-            return healthResponse.IsSuccessStatusCode;
-        }
+        var correlationId = Guid.NewGuid().ToString();
+        using var _ = _logger.BeginScope("Process Youtube playlistId: {PlaylistId}. {CorrelationId}", playlistId, correlationId);
 
         string[] scopes = { YouTubeService.ScopeConstants.Youtube };
         const string applicationName = "courses";
@@ -87,15 +81,16 @@ internal class Playlist
             ApplicationName = applicationName
         });
 
-        var playlistRequest = service.Playlists.List("snippet");
-        playlistRequest.Id = playlistId;
+        service.HttpClient.MessageHandler.AddExecuteInterceptor(_interceptor);
 
         var request = service.PlaylistItems.List("snippet");
         request.PlaylistId = playlistId;
         request.MaxResults = 50;
 
+        var stopWatch = Stopwatch.StartNew();
+        _logger.LogInformation("Started processing playlist: {PlaylistId}", playlistId);
         var response = await request.ExecuteAsync(cancellationToken);
-        var entries = new List<CreateCourseFromPlaylistRequestEntry>();
+        var entries = new List<CreateRequestBody.Playlist.Entry>();
         var sequenceNumber = 0;
         var hdVideosCount = 0;
 
@@ -114,26 +109,45 @@ internal class Playlist
 
                 if (video.ContentDetails.Definition == "hd") hdVideosCount++;
 
-                entries.Add(new CreateCourseFromPlaylistRequestEntry(videoTitle, videoDurationInTimeSpan, ++sequenceNumber, video.Id));
+                // new CreateCourseFromPlaylistRequestEntry(videoTitle, videoDurationInTimeSpan, ++sequenceNumber, video.Id)
+                var playlistEntry = new CreateRequestBody.Playlist.Entry
+                    { Name = videoTitle, VideoId = video.Id, Duration = videoDurationInTimeSpan, SequenceNumber = ++sequenceNumber };
+                entries.Add(playlistEntry);
             }
 
             request.PageToken = response.NextPageToken;
             response = await request.ExecuteAsync(cancellationToken);
         } while (!string.IsNullOrEmpty(response.NextPageToken));
 
+        var playlistRequest = service.Playlists.List("snippet");
+        playlistRequest.Id = playlistId;
         var playlistResponse = await playlistRequest.ExecuteAsync(cancellationToken);
+
+        stopWatch.Stop();
+        _logger.LogInformation("Done processing playlist: {PlaylistId}. Tool {@ElapsedTime}", playlistId, stopWatch.Elapsed);
+
         var playlist = playlistResponse.Items.First();
         var isCourseHd = decimal.Divide(hdVideosCount, entries.Count) * 100 > 50;
         var playlistDuration = entries.Aggregate(TimeSpan.Zero, (acc, curr) => curr.Duration + acc);
-        var createCourseRequest = new CreateCourseFromPlaylistRequest(playlist.Snippet.Title, playlistDuration, Array.Empty<string>(), isCourseHd,
-            playlist.Id, entries.ToArray());
 
-        // foreach (var entry in createCourseRequest.Entries)
-        // {
-        //     Console.WriteLine($"{entry.Name} - {entry.Duration:g}");
-        // }
+        var body = new CreateRequestBody.Playlist
+        {
+            Name = playlist.Snippet.Title,
+            Duration = playlistDuration,
+            PlaylistId = playlist.Id,
+            Entries = entries.ToArray(),
+            IsHighDefinition = isCourseHd
+        };
+        var json = JsonSerializer.Serialize(body);
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
+        var httpRequest = new HttpRequestMessage(HttpMethod.Post, "")
+        {
+            Content = content
+        };
+        httpRequest.Headers.Add("x-correlation-id", correlationId);
 
-        var postAsyncTask = http.PostAsJsonAsync("api/Courses/:playlist", createCourseRequest, cancellationToken);
+        _logger.LogInformation("Sending Playlist contents to API: {@Body}", body);
+        var postAsyncTask = _httpClient.SendAsync(httpRequest, cancellationToken);
         HttpResponseMessage? httpResponseMessage = null;
 
         await AnsiConsole.Status()
@@ -143,9 +157,9 @@ internal class Playlist
 
         if (!httpResponseMessage.IsSuccessStatusCode)
             _logger.LogError("Error indexing course, Response: {ErrorResponse}",
-                await httpResponseMessage.Content.ReadAsStringAsync());
+                await httpResponseMessage.Content.ReadAsStringAsync(cancellationToken));
 
         httpResponseMessage.EnsureSuccessStatusCode();
-        _logger.LogDebug("Added {CourseName} into Database", createCourseRequest.Name);
+        _logger.LogDebug("Added {CourseName} into Database", body.Name);
     }
 }

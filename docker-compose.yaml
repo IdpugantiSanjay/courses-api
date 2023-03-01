@@ -1,14 +1,28 @@
 services:
   ui:
-    image: isanjay112/courses-ui
+    container_name: ui
+    image: isanjay112/courses-ui:latest
     ports:
       - "4200:4200"
     restart: unless-stopped
   api:
-    image: isanjay112/courses
+    container_name: api
+    image: isanjay112/courses:latest
     ports:
       - "5195:80"
     environment:
       - LogToPath=/home/sanjay/Work/DockerComposeFiles/courses/logs
       - ConnectionStrings__Postgres=Host=192.168.29.157;Username=postgres;Password=postgres;Database=courses
     restart: unless-stopped
+  watchtower:
+    image: containrrr/watchtower
+    container_name: watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: --interval 30 ui api
+  seq:
+    image: datalust/seq:latest
+    ports:
+      - 5341:5341
+    environment:
+      ACCEPT_EULA: Y
