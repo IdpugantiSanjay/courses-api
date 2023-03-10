@@ -47,7 +47,7 @@ public class CourseApiTests : IClassFixture<IntegrationTestFactory<Program, Cour
     [Fact]
     public async Task EmptyListShouldReturnOk()
     {
-        var sut = async () => await _api.List();
+        var sut = async () => await _api.List(CourseView.Default);
         await sut.Should().NotThrowAsync();
     }
 
@@ -221,7 +221,7 @@ public class CourseApiTests : IClassFixture<IntegrationTestFactory<Program, Cour
         var createResponse = await _api.Create(requestBody);
         createResponse.Should().BeGreaterThan(0);
 
-        var listResponse = await _api.ListWithEntries();
+        var listResponse = await _api.List(CourseView.Default);
         listResponse.Items.Length.Should().BeGreaterThan(0);
     }
 }

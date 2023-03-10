@@ -1,8 +1,9 @@
-using OneOf;
-using OneOf.Types;
+using System.Text.Json.Serialization;
+using CourseModule.Contracts.JsonConvertors;
 
 namespace CourseModule.Contracts;
 
+[JsonConverter(typeof(CreateResponseJsonConvertor))]
 public abstract record CourseResponse
 {
     public int Id { get; init; }
@@ -15,12 +16,12 @@ public abstract record CourseResponse
     {
         public bool IsHighDefinition { get; init; }
         public string? PlaylistId { get; init; }
-        public override string Kind => "Default";
+        public override string Kind => nameof(Default);
     }
 
     public record WithEntries : CourseResponse
     {
-        public override string Kind => "WithEntries";
+        public override string Kind => nameof(WithEntries);
 
         public required Entry[] Entries { get; init; } = Array.Empty<Entry>();
 
@@ -39,10 +40,10 @@ public abstract record CourseResponse
     }
 }
 
-public static class Extensions
-{
-    public static bool IsSuccess(this OneOf<CourseResponse, NotFound, Error<Exception>> @class)
-    {
-        return @class.IsT0;
-    }
-}
+// public static class Extensions
+// {
+//     public static bool IsSuccess(this OneOf<CourseResponse, NotFound, Error<Exception>> @class)
+//     {
+//         return @class.IsT0;
+//     }
+// }

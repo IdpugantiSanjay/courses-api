@@ -24,11 +24,8 @@ public interface ICourseApi
     [Post(Constants.CurrentVersionCoursesApiBasePath)]
     Task<int> Create([Body] CreateRequestBody.Playlist request);
 
-    [Get($"{Constants.CurrentVersionCoursesApiBasePath}?view=entries")]
-    Task<ListResponse<CourseResponse.WithEntries>> ListWithEntries();
-
-    [Get($"{Constants.CurrentVersionCoursesApiBasePath}?view=default")]
-    Task<ListResponse<CourseResponse.Default>> List();
+    [Get($"{Constants.CurrentVersionCoursesApiBasePath}")]
+    Task<ListResponse<CourseResponse>> List(CourseView view);
 
     [Get($$"""{{Constants.CurrentVersionCoursesApiBasePath}}/{id}""")]
     Task Delete(int id);

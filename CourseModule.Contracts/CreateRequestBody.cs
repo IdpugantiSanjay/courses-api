@@ -8,7 +8,7 @@ public abstract record CreateRequestBody
 {
     public required string Name { get; init; } = string.Empty;
     public required TimeSpan Duration { get; init; } = TimeSpan.Zero;
-    public abstract string Type { get; }
+    public abstract string Kind { get; }
 
     private interface IEntryProps
     {
@@ -22,7 +22,7 @@ public abstract record CreateRequestBody
         public bool IsHighDefinition { get; init; }
         public required Entry[] Entries { get; init; } = Array.Empty<Entry>();
 
-        public override string Type => nameof(Default);
+        public override string Kind => nameof(Default);
 
         public record Entry : IEntryProps
         {
@@ -43,7 +43,7 @@ public abstract record CreateRequestBody
 
         public required Entry[] Entries { get; init; } = Array.Empty<Entry>();
 
-        public override string Type => nameof(Playlist);
+        public override string Kind => nameof(Playlist);
 
         public record Entry : IEntryProps
         {

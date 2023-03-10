@@ -11,9 +11,9 @@ public class CreateRequestBodyJsonConvertor : JsonConverter<CreateRequestBody>
     {
         var readerClone = reader;
         using var jsonDocument = JsonDocument.ParseValue(ref readerClone);
-        if (!jsonDocument.RootElement.TryGetProperty("type", out var typeProperty)) throw new JsonException();
+        if (!jsonDocument.RootElement.TryGetProperty("kind", out var kind)) throw new JsonException();
 
-        return typeProperty.GetString()?.ToLower() switch
+        return kind.GetString()?.ToLower() switch
         {
             "default" => JsonSerializer.Deserialize<CreateRequestBody.Default>(ref reader, options),
             "playlist" => JsonSerializer.Deserialize<CreateRequestBody.Playlist>(ref reader, options),
