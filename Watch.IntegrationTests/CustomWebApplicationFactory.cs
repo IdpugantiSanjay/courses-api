@@ -1,3 +1,4 @@
+using CourseModule.Database;
 using JetBrains.Annotations;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -6,8 +7,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 using Respawn;
+using WatchModule.Database;
 
-namespace Courses.IntegrationTests;
+namespace Watch.IntegrationTests;
 
 public static class ServiceCollectionExtensions
 {
@@ -29,8 +31,8 @@ public static class ServiceCollectionExtensions
 }
 
 [UsedImplicitly]
-public class IntegrationTestFactory<TProgram, TDbContext> : WebApplicationFactory<TProgram>, IAsyncLifetime
-    where TProgram : class where TDbContext : DbContext
+public class IntegrationTestFactory<TProgram> : WebApplicationFactory<TProgram>, IAsyncLifetime
+    where TProgram : class
 {
     private const string ConnectionString = "Host=192.168.29.157;Username=postgres;Password=postgres;Database=courses_integration_test";
     private Respawner _respawner = null!;
@@ -53,9 +55,13 @@ public class IntegrationTestFactory<TProgram, TDbContext> : WebApplicationFactor
     {
         builder.ConfigureTestServices(services =>
         {
-            services.RemoveDbContext<TDbContext>();
-            services.AddDbContext<TDbContext>(options => { options.UseNpgsql(ConnectionString); });
-            services.EnsureDbCreated<TDbContext>();
+            services.RemoveDbContext<CourseDbContext>();
+            services.AddDbContext<CourseDbContext>(options => { options.UseNpgsql(ConnectionString); });
+            services.EnsureDbCreated<CourseDbContext>();
+
+            services.RemoveDbContext<WatchDbContext>();
+            services.AddDbContext<WatchDbContext>(options => { options.UseNpgsql(ConnectionString); });
+            services.EnsureDbCreated<WatchDbContext>();
         });
     }
 }

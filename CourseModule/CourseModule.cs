@@ -10,7 +10,7 @@ public static class CourseModule
     public static IServiceCollection RegisterCourseModule(this IServiceCollection services, IConfiguration configuration)
     {
         return services.AddCourseModule()
-                .AddDbContext<CourseDbContext>(options => options.UseNpgsql(configuration.GetConnectionString("Default")).UseSnakeCaseNamingConvention())
+                .AddDbContext<CourseDbContext>(options => { options.UseNpgsql(configuration.GetConnectionString("Default")); })
             ;
     }
 }

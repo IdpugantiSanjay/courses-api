@@ -16,8 +16,6 @@ public class CourseDbContext : DbContext, IAppDbContext
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
-        builder.HasDefaultSchema(Schema);
-
         builder.Entity<Course>()
             .Property(c => c.Duration)
             .HasConversion<long>()

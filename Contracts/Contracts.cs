@@ -1,13 +1,7 @@
-﻿using System.Net;
-using OneOf;
+﻿using OneOf;
 using OneOf.Types;
 
 namespace Contracts;
-
-public interface IRequest
-{
-    HttpStatusCode HttpStatusCode { get; }
-}
 
 public interface IGetRequest<TParentIdentity, TIdentity, TView> where TParentIdentity : struct where TIdentity : struct where TView : Enum
 {
@@ -35,10 +29,16 @@ public interface IDeleteRequest<TParentIdentity, TIdentity> where TParentIdentit
     TIdentity Id { get; }
 }
 
-public interface IBatchGetRequest<TParentIdentity, TIdentity> where TParentIdentity : struct where TIdentity : struct
+public interface IBatchGetRequest<TParentIdentity, TIdentity, TView> where TParentIdentity : struct where TIdentity : struct where TView : Enum
 {
+    TView View { get; }
     TParentIdentity ParentId { get; }
     TIdentity[] Identities { get; }
+}
+
+public interface IBatchGetResponse<TResponseItem>
+{
+    public TResponseItem?[] Responses { get; set; }
 }
 
 public interface IListRequest<TParentIdentity, TView> where TParentIdentity : struct where TView : Enum
@@ -82,14 +82,14 @@ public interface IGet<TParentIdentity, TIdentity, TView, TResponse> where TParen
     public Task<OneOf<TResponse, NotFound, Error<Exception>>> Get(IGetRequest<TParentIdentity, TIdentity, TView> request, CancellationToken cancellationToken);
 }
 
+public interface IBatchGet<TParentIdentity, TIdentity, TView, TResponse> where TParentIdentity : struct where TIdentity : struct where TView : Enum
+{
+    public Task<IBatchGetResponse<TResponse>> BatchGet(IBatchGetRequest<TParentIdentity, TIdentity, TView> request, CancellationToken cancellationToken);
+}
+
 public interface ITransform<TSelf, out TEntity> where TSelf : ITransform<TSelf, TEntity>
 {
     public TEntity Transform();
 }
 
 public record ListResponse<TResponse>(TResponse[] Items, string NextPageToken) : IListResponse<TResponse>;
-
-// public interface IValidateRequestBody<out TReturn>
-// {
-//     public static abstract TReturn Validate();
-// }

@@ -1,9 +1,14 @@
+using System.Text.Json.Serialization;
+using CourseModule.Contracts.JsonConvertors;
+
 namespace CourseModule.Contracts;
 
+[JsonConverter(typeof(CreateRequestBodyJsonConvertor))]
 public abstract record CreateRequestBody
 {
     public required string Name { get; init; } = string.Empty;
     public required TimeSpan Duration { get; init; } = TimeSpan.Zero;
+    public abstract string Type { get; }
 
     private interface IEntryProps
     {
@@ -16,6 +21,8 @@ public abstract record CreateRequestBody
         public string[]? Categories { get; init; }
         public bool IsHighDefinition { get; init; }
         public required Entry[] Entries { get; init; } = Array.Empty<Entry>();
+
+        public override string Type => nameof(Default);
 
         public record Entry : IEntryProps
         {
@@ -35,6 +42,8 @@ public abstract record CreateRequestBody
         public bool IsHighDefinition { get; init; }
 
         public required Entry[] Entries { get; init; } = Array.Empty<Entry>();
+
+        public override string Type => nameof(Playlist);
 
         public record Entry : IEntryProps
         {

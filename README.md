@@ -52,12 +52,14 @@ Command to update dotnet-tool in directory Courses.CLI
 
 Command to add migration for course module. [SO Link](https://stackoverflow.com/a/39621455)
 ```bash
-dotnet ef migrations add <migration-name> -s API -p CourseModule
+# dotnet ef migrations add <migration-name> -s API -p CourseModule
+dotnet ef migrations add <migration-name> -s API -p WatchModule --context WatchDbContext
 ```
 
 Command to update database for course module
 ```bash
-dotnet ef database update -s API -p CourseModule
+# dotnet ef database update -s API -p CourseModule
+dotnet ef database update -s API -p WatchModule --context WatchDbContext
 ```
 
 Tags:
@@ -70,3 +72,18 @@ Tags:
 6. Performance / Scaling
 7. Maintainability / Technical Debt
 8. Cost Optimization
+
+### Development Issues
+
+CommandText property has not been initialized 
+-> Respawner invalid schemas included
+
+Relation <table-name> does not exist
+```csharp
+# looks like the dbcontext was using default connection string explicitly passing 
+# ConnectionString fixed the issue
+
+services.RemoveDbContext<WatchDbContext>();
+services.AddDbContext<WatchDbContext>(options => { options.UseNpgsql(ConnectionString); });
+services.EnsureDbCreated<WatchDbContext>();
+```

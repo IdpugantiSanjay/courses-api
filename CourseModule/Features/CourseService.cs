@@ -1,7 +1,9 @@
 using CourseModule.Database;
+using Injectio.Attributes;
 
 namespace CourseModule.Features;
 
+[RegisterScoped]
 public sealed partial class CourseService
 {
     private readonly CourseDbContext _context;

@@ -7,19 +7,11 @@
     </PropertyGroup>
 
     <PropertyGroup>
-        <InjectioName>CourseModule</InjectioName>
+        <InjectioName>WatchModule</InjectioName>
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Contracts\Contracts.csproj"/>
-        <ProjectReference Include="..\CourseModule.Contracts\CourseModule.Contracts.csproj"/>
-        <ProjectReference Include="..\SharedModule\SharedModule.csproj"/>
-    </ItemGroup>
-
-    <ItemGroup>
-        <PackageReference Include="FluentValidation" Version="11.5.1"/>
         <PackageReference Include="Injectio" Version="2.5.65"/>
-        <PackageReference Include="Mapster" Version="7.4.0-pre05"/>
         <PackageReference Include="Mediator.Abstractions" Version="2.1.1"/>
         <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.2.0"/>
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.3">
@@ -27,7 +19,14 @@
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="7.0.3"/>
-        <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="6.5.0"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Contracts\Contracts.csproj"/>
+        <ProjectReference Include="..\CourseModule.Contracts\CourseModule.Contracts.csproj"/>
+        <!--      <ProjectReference Include="..\CourseModule\CourseModule.csproj" />-->
+        <ProjectReference Include="..\SharedModule\SharedModule.csproj"/>
+        <ProjectReference Include="..\WatchModule.Contracts\WatchModule.Contracts.csproj"/>
     </ItemGroup>
 
 </Project>

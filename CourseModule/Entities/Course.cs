@@ -20,12 +20,5 @@ public class Course
 
     [StringLength(64)] public string? Host { get; set; } = null!;
 
-    //# Entity Framework
-    // public Author? Author { get; set; } = null!;
-    //
-    // public Platform? Platform { get; set; } = null!;
-
     public List<CourseEntry> Entries { get; set; } = new();
-
-    // public List<WatchHistory.WatchHistory> WatchHistory { get; set; } = null!;
 }

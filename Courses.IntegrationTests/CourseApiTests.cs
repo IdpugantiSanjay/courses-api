@@ -1,21 +1,23 @@
 using System.Net;
 using System.Net.Http.Json;
-using Contracts;
 using CourseModule.Contracts;
 using CourseModule.Database;
 using Courses.API;
 using FluentAssertions;
+using Refit;
 
 namespace Courses.IntegrationTests;
 
 public class CourseApiTests : IClassFixture<IntegrationTestFactory<Program, CourseDbContext>>
 {
     private const string BaseUrl = "/api/v1/courses";
+    private readonly ICourseApi _api;
     private readonly HttpClient _client;
 
     public CourseApiTests(IntegrationTestFactory<Program, CourseDbContext> factory)
     {
         _client = factory.CreateDefaultClient();
+        _api = RestService.For<ICourseApi>(_client);
     }
 
     [Fact]
@@ -38,15 +40,15 @@ public class CourseApiTests : IClassFixture<IntegrationTestFactory<Program, Cour
             IsHighDefinition = false
         };
 
-        var response = await _client.PostAsJsonAsync(BaseUrl, requestBody);
-        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        var courseId = await _api.Create(requestBody);
+        courseId.Should().BeGreaterThan(0);
     }
 
     [Fact]
-    public async Task ListShouldReturnOk()
+    public async Task EmptyListShouldReturnOk()
     {
-        var response = await _client.GetAsync(BaseUrl);
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var sut = async () => await _api.List();
+        await sut.Should().NotThrowAsync();
     }
 
     [Fact]
@@ -61,8 +63,8 @@ public class CourseApiTests : IClassFixture<IntegrationTestFactory<Program, Cour
             IsHighDefinition = false
         };
 
-        var response = await _client.PostAsJsonAsync(BaseUrl, requestBody);
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var sut = async () => await _api.Create(requestBody);
+        await sut.Should().ThrowAsync<ApiException>();
     }
 
     [Fact]
@@ -85,13 +87,9 @@ public class CourseApiTests : IClassFixture<IntegrationTestFactory<Program, Cour
             IsHighDefinition = false
         };
 
-        var response = await _client.PostAsJsonAsync(BaseUrl, requestBody);
-        response.StatusCode.Should().Be(HttpStatusCode.Created);
-
-        var createdId = response.Headers.Location!.ToString().Split("/").Last();
-
-        var deleteResponse = await _client.DeleteAsync($"{BaseUrl}/{createdId}");
-        deleteResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        var createdId = await _api.Create(requestBody);
+        var sut = async () => await _api.Delete(createdId);
+        await sut.Should().NotThrowAsync<ApiException>();
     }
 
     [Fact]
@@ -114,13 +112,9 @@ public class CourseApiTests : IClassFixture<IntegrationTestFactory<Program, Cour
             IsHighDefinition = false
         };
 
-        var response = await _client.PostAsJsonAsync(BaseUrl, requestBody);
-        response.StatusCode.Should().Be(HttpStatusCode.Created);
-
-        var createdId = response.Headers.Location!.ToString().Split("/").Last();
-
-        var getResponse = await _client.GetAsync($"{BaseUrl}/{createdId}");
-        getResponse.StatusCode.Should().Be(HttpStatusCode.OK);
+        var createdId = await _api.Create(requestBody);
+        var course = await _api.Get(createdId);
+        course.Id.Should().BeGreaterThan(0);
     }
 
     [Fact]
@@ -145,8 +139,8 @@ public class CourseApiTests : IClassFixture<IntegrationTestFactory<Program, Cour
             PlaylistId = "1"
         };
 
-        var response = await _client.PostAsJsonAsync(BaseUrl, requestBody);
-        response.StatusCode.Should().Be(HttpStatusCode.Created);
+        var createdId = await _api.Create(requestBody);
+        createdId.Should().BeGreaterThan(0);
     }
 
     [Fact]
@@ -195,17 +189,11 @@ public class CourseApiTests : IClassFixture<IntegrationTestFactory<Program, Cour
             IsHighDefinition = false
         };
 
-        var postResponse = await _client.PostAsJsonAsync(BaseUrl, requestBody);
-        postResponse.StatusCode.Should().Be(HttpStatusCode.Created);
-
-        var createdId = postResponse.Headers.Location!.ToString().Split("/").Last();
-
-        var response = await _client.GetAsync($"{BaseUrl}/{createdId}?view=Entries");
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
-
-        var result = await response.Content.ReadFromJsonAsync<CourseResponse.WithEntries>();
-        result!.Entries.Length.Should().Be(1);
+        var createdCourseId = await _api.Create(requestBody);
+        var result = await _api.GetWithEntries(createdCourseId);
+        result.Entries.Length.Should().Be(1);
         result.Entries.First().Name.Should().Be("Introduction");
+        result.Entries.First().Duration.Should().Be(TimeSpan.FromMinutes(1));
         result.Name.Should().Be(name);
     }
 
@@ -230,12 +218,10 @@ public class CourseApiTests : IClassFixture<IntegrationTestFactory<Program, Cour
             IsHighDefinition = false
         };
 
-        var postResponse = await _client.PostAsJsonAsync(BaseUrl, requestBody);
-        postResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+        var createResponse = await _api.Create(requestBody);
+        createResponse.Should().BeGreaterThan(0);
 
-        var response = await _client.GetAsync($"{BaseUrl}?view=Entries");
-        response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var result = await response.Content.ReadFromJsonAsync<ListResponse<CourseResponse.WithEntries>>();
-        result!.Items.Length.Should().BeGreaterThan(0);
+        var listResponse = await _api.ListWithEntries();
+        listResponse.Items.Length.Should().BeGreaterThan(0);
     }
 }

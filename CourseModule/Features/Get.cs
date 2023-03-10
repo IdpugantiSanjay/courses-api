@@ -3,13 +3,12 @@ using Contracts;
 using CourseModule.Contracts;
 using Injectio.Attributes;
 using Mapster;
+using Mediator;
 using Microsoft.EntityFrameworkCore;
 using OneOf;
 using OneOf.Types;
 
 namespace CourseModule.Features;
-
-public record GetCourseRequest(int ParentId, int Id, CourseView View) : IGetRequest<int, int, CourseView>;
 
 [RegisterScoped<IGet<int, int, CourseView, CourseResponse>>]
 public sealed partial class CourseService : IGet<int, int, CourseView, CourseResponse>
@@ -35,5 +34,20 @@ public sealed partial class CourseService : IGet<int, int, CourseView, CourseRes
 
         var entity = await projection.FirstOrDefaultAsync(cancellationToken);
         return entity is null ? new NotFound() : entity;
+    }
+}
+
+public sealed class Handler : IRequestHandler<GetCourseRequest, OneOf<CourseResponse, NotFound, Error<Exception>>>
+{
+    private readonly IGet<int, int, CourseView, CourseResponse> _service;
+
+    public Handler(IGet<int, int, CourseView, CourseResponse> service)
+    {
+        _service = service;
+    }
+
+    public async ValueTask<OneOf<CourseResponse, NotFound, Error<Exception>>> Handle(GetCourseRequest request, CancellationToken cancellationToken)
+    {
+        return await _service.Get(request, cancellationToken);
     }
 }

@@ -17,9 +17,17 @@ public sealed partial class CourseService : ICreate<int, CreateRequestBody, int>
 {
     public async Task<int> Create(ICreateRequest<int, CreateRequestBody> request, CancellationToken cancellationToken)
     {
-        var course = request.Body.Adapt<Course>();
-        _context.Courses.Add(course);
-        await _context.SaveChangesAsync(cancellationToken);
-        return course.Id;
+        try
+        {
+            var course = request.Body.Adapt<Course>();
+            _context.Courses.Add(course);
+            await _context.SaveChangesAsync(cancellationToken);
+            return course.Id;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
     }
 }

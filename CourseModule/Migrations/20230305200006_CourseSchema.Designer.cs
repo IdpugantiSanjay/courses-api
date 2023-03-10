@@ -11,15 +11,14 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CourseModule.Migrations
 {
     [DbContext(typeof(CourseDbContext))]
-    [Migration("20230219192628_ChangeNamingConventions")]
-    partial class ChangeNamingConventions
+    [Migration("20230305200006_CourseSchema")]
+    partial class CourseSchema
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasDefaultSchema("course")
                 .HasAnnotation("ProductVersion", "7.0.3")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
@@ -29,96 +28,77 @@ namespace CourseModule.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("id");
+                        .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string[]>("Categories")
-                        .HasColumnType("text[]")
-                        .HasColumnName("categories");
+                        .HasColumnType("text[]");
 
                     b.Property<long>("Duration")
-                        .HasColumnType("bigint")
-                        .HasColumnName("duration");
+                        .HasColumnType("bigint");
 
                     b.Property<string>("Host")
                         .HasMaxLength(64)
-                        .HasColumnType("character varying(64)")
-                        .HasColumnName("host");
+                        .HasColumnType("character varying(64)");
 
                     b.Property<bool>("IsHighDefinition")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_high_definition");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(128)
-                        .HasColumnType("character varying(128)")
-                        .HasColumnName("name");
+                        .HasColumnType("character varying(128)");
 
                     b.Property<string>("Path")
                         .HasMaxLength(512)
-                        .HasColumnType("character varying(512)")
-                        .HasColumnName("path");
+                        .HasColumnType("character varying(512)");
 
                     b.Property<string>("PlaylistId")
-                        .HasColumnType("text")
-                        .HasColumnName("playlist_id");
+                        .HasColumnType("text");
 
-                    b.HasKey("Id")
-                        .HasName("pk_courses");
+                    b.HasKey("Id");
 
                     b.HasIndex("Name")
-                        .IsUnique()
-                        .HasDatabaseName("ix_courses_name");
+                        .IsUnique();
 
-                    b.ToTable("courses", "course");
+                    b.ToTable("Courses");
                 });
 
             modelBuilder.Entity("CourseModule.Entities.CourseEntry", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("id");
+                        .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int>("CourseId")
-                        .HasColumnType("integer")
-                        .HasColumnName("course_id");
+                        .HasColumnType("integer");
 
                     b.Property<long>("Duration")
-                        .HasColumnType("bigint")
-                        .HasColumnName("duration");
+                        .HasColumnType("bigint");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(128)
-                        .HasColumnType("character varying(128)")
-                        .HasColumnName("name");
+                        .HasColumnType("character varying(128)");
 
                     b.Property<string>("Section")
                         .HasMaxLength(128)
-                        .HasColumnType("character varying(128)")
-                        .HasColumnName("section");
+                        .HasColumnType("character varying(128)");
 
                     b.Property<int>("SequenceNumber")
-                        .HasColumnType("integer")
-                        .HasColumnName("sequence_number");
+                        .HasColumnType("integer");
 
                     b.Property<string>("VideoId")
-                        .HasColumnType("text")
-                        .HasColumnName("video_id");
+                        .HasColumnType("text");
 
-                    b.HasKey("Id")
-                        .HasName("pk_course_entry");
+                    b.HasKey("Id");
 
-                    b.HasIndex("CourseId")
-                        .HasDatabaseName("ix_course_entry_course_id");
+                    b.HasIndex("CourseId");
 
-                    b.ToTable("course_entry", "course");
+                    b.ToTable("CourseEntry");
                 });
 
             modelBuilder.Entity("CourseModule.Entities.CourseEntry", b =>
@@ -127,8 +107,7 @@ namespace CourseModule.Migrations
                         .WithMany("Entries")
                         .HasForeignKey("CourseId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_course_entry_courses_course_id");
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("CourseModule.Entities.Course", b =>

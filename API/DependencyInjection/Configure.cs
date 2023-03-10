@@ -89,9 +89,16 @@ public static class Configure
             .AddFluentValidationClientsideAdapters()
             // .AddMediatR(typeof(CoursesController))
             .AddHealthChecks()
+
             // .AddElasticsearch(configValues.ElasticSearchConnectionString)
             .AddNpgSql(configValues.NpgSqlConnectionString)
             ;
+
+        serviceCollection.AddMediator(options => options.ServiceLifetime = ServiceLifetime.Scoped);
+        // serviceCollection.AddMediator(options =>
+        // {
+        //     options.Namespace = "API";
+        // });
 
         // serviceCollection.AddDbContext<AppDbContext>(options =>
         //     options.UseNpgsql(configValues.NpgSqlConnectionString));
