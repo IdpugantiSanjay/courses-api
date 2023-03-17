@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Net.Http.Json;
 using Contracts;
 using CourseModule.Contracts;
 using Microsoft.Extensions.Logging;
@@ -9,13 +8,13 @@ namespace Courses.CLI;
 
 internal class ListCourses
 {
-    private readonly HttpClient _httpClient;
+    private readonly ICourseApi _api;
     private readonly ILogger<ListCourses> _logger;
 
-    public ListCourses(ILogger<ListCourses> logger, HttpClient httpClient)
+    public ListCourses(ILogger<ListCourses> logger, ICourseApi api)
     {
         _logger = logger;
-        _httpClient = httpClient;
+        _api = api;
     }
 
     public async Task List()
@@ -23,28 +22,14 @@ internal class ListCourses
         var correlationId = Guid.NewGuid().ToString();
         using var _ = _logger.BeginScope("Starting listing courses. {CorrelationId}", correlationId);
 
-        var httpRequestMessage = new HttpRequestMessage(HttpMethod.Get, "");
-        httpRequestMessage.Headers.Add("x-correlation-id", correlationId);
-
-        var getAsyncTask = _httpClient.SendAsync(httpRequestMessage);
-        HttpResponseMessage? httpResponseMessage = null;
+        var listTask = _api.List(CourseView.Default, correlationId);
+        ListResponse<CourseResponse>? response = null;
 
         await AnsiConsole.Status()
-            .StartAsync("Loading...", async _ => { httpResponseMessage = await getAsyncTask; });
-
-        Debug.Assert(httpResponseMessage != null, nameof(httpResponseMessage) + " != null");
-
-        if (!httpResponseMessage.IsSuccessStatusCode)
-            _logger.LogError("Error indexing course, Response: {ErrorResponse}",
-                await httpResponseMessage.Content.ReadAsStringAsync());
-
-        httpResponseMessage.EnsureSuccessStatusCode();
-
-        _logger.LogInformation("GET request returned with success code");
-
-        var response = await httpResponseMessage.Content.ReadFromJsonAsync<ListResponse<CourseResponse.Default>>();
+            .StartAsync("Loading...", async _ => { response = await listTask; });
 
         Debug.Assert(response != null, nameof(response) + " != null");
+        _logger.LogInformation("GET request returned with success code");
 
         if (response.Items.Length == 0) AnsiConsole.Console.WriteLine("No courses found.", new Style(Color.Yellow));
 

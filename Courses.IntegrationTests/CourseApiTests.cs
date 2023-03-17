@@ -13,6 +13,7 @@ public class CourseApiTests : IClassFixture<IntegrationTestFactory<Program, Cour
     private const string BaseUrl = "/api/v1/courses";
     private readonly ICourseApi _api;
     private readonly HttpClient _client;
+    private readonly string correlationId = string.Empty;
 
     public CourseApiTests(IntegrationTestFactory<Program, CourseDbContext> factory)
     {
@@ -40,14 +41,14 @@ public class CourseApiTests : IClassFixture<IntegrationTestFactory<Program, Cour
             IsHighDefinition = false
         };
 
-        var courseId = await _api.Create(requestBody);
+        var courseId = await _api.Create(requestBody, correlationId);
         courseId.Should().BeGreaterThan(0);
     }
 
     [Fact]
     public async Task EmptyListShouldReturnOk()
     {
-        var sut = async () => await _api.List(CourseView.Default);
+        var sut = async () => await _api.List(CourseView.Default, correlationId);
         await sut.Should().NotThrowAsync();
     }
 
@@ -63,7 +64,7 @@ public class CourseApiTests : IClassFixture<IntegrationTestFactory<Program, Cour
             IsHighDefinition = false
         };
 
-        var sut = async () => await _api.Create(requestBody);
+        var sut = async () => await _api.Create(requestBody, correlationId);
         await sut.Should().ThrowAsync<ApiException>();
     }
 
@@ -87,8 +88,8 @@ public class CourseApiTests : IClassFixture<IntegrationTestFactory<Program, Cour
             IsHighDefinition = false
         };
 
-        var createdId = await _api.Create(requestBody);
-        var sut = async () => await _api.Delete(createdId);
+        var createdId = await _api.Create(requestBody, correlationId);
+        var sut = async () => await _api.Delete(createdId, correlationId);
         await sut.Should().NotThrowAsync<ApiException>();
     }
 
@@ -112,8 +113,8 @@ public class CourseApiTests : IClassFixture<IntegrationTestFactory<Program, Cour
             IsHighDefinition = false
         };
 
-        var createdId = await _api.Create(requestBody);
-        var course = await _api.Get(createdId);
+        var createdId = await _api.Create(requestBody, correlationId);
+        var course = await _api.Get(createdId, correlationId);
         course.Id.Should().BeGreaterThan(0);
     }
 
@@ -139,7 +140,7 @@ public class CourseApiTests : IClassFixture<IntegrationTestFactory<Program, Cour
             PlaylistId = "1"
         };
 
-        var createdId = await _api.Create(requestBody);
+        var createdId = await _api.Create(requestBody, correlationId);
         createdId.Should().BeGreaterThan(0);
     }
 
@@ -189,8 +190,8 @@ public class CourseApiTests : IClassFixture<IntegrationTestFactory<Program, Cour
             IsHighDefinition = false
         };
 
-        var createdCourseId = await _api.Create(requestBody);
-        var result = await _api.GetWithEntries(createdCourseId);
+        var createdCourseId = await _api.Create(requestBody, correlationId);
+        var result = await _api.GetWithEntries(createdCourseId, correlationId);
         result.Entries.Length.Should().Be(1);
         result.Entries.First().Name.Should().Be("Introduction");
         result.Entries.First().Duration.Should().Be(TimeSpan.FromMinutes(1));
@@ -218,10 +219,10 @@ public class CourseApiTests : IClassFixture<IntegrationTestFactory<Program, Cour
             IsHighDefinition = false
         };
 
-        var createResponse = await _api.Create(requestBody);
+        var createResponse = await _api.Create(requestBody, correlationId);
         createResponse.Should().BeGreaterThan(0);
 
-        var listResponse = await _api.List(CourseView.Default);
+        var listResponse = await _api.List(CourseView.Default, correlationId);
         listResponse.Items.Length.Should().BeGreaterThan(0);
     }
 }

@@ -13,20 +13,20 @@ file static class Constants
 public interface ICourseApi
 {
     [Get($$"""{{Constants.CurrentVersionCoursesApiBasePath}}/{id}?view=default""")]
-    Task<CourseResponse.Default> Get(int id);
+    Task<CourseResponse.Default> Get(int id, [Header("x-correlation-id")] string correlationId);
 
     [Get($$"""{{Constants.CurrentVersionCoursesApiBasePath}}/{id}?view=entries""")]
-    Task<CourseResponse.WithEntries> GetWithEntries(int id);
+    Task<CourseResponse.WithEntries> GetWithEntries(int id, [Header("x-correlation-id")] string correlationId);
 
     [Post(Constants.CurrentVersionCoursesApiBasePath)]
-    Task<int> Create([Body] CreateRequestBody.Default request);
+    Task<int> Create([Body] CreateRequestBody.Default request, [Header("x-correlation-id")] string correlationId);
 
     [Post(Constants.CurrentVersionCoursesApiBasePath)]
-    Task<int> Create([Body] CreateRequestBody.Playlist request);
+    Task<int> Create([Body] CreateRequestBody.Playlist request, [Header("x-correlation-id")] string correlationId);
 
     [Get($"{Constants.CurrentVersionCoursesApiBasePath}")]
-    Task<ListResponse<CourseResponse>> List(CourseView view);
+    Task<ListResponse<CourseResponse>> List(CourseView view, [Header("x-correlation-id")] string correlationId);
 
     [Get($$"""{{Constants.CurrentVersionCoursesApiBasePath}}/{id}""")]
-    Task Delete(int id);
+    Task Delete(int id, [Header("x-correlation-id")] string correlationId);
 }

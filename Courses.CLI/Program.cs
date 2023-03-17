@@ -1,9 +1,11 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
 using System.CommandLine;
+using CourseModule.Contracts;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Refit;
 using Serilog;
 using Serilog.Events;
 
@@ -43,18 +45,23 @@ public class Program
                 s.AddSingleton<GetCourse>();
                 s.AddSingleton<Playlist>();
                 s.AddSingleton<HttpInterceptor>();
-
-                void ConfigureClient(HttpClient client)
+                s.AddRefitClient<ICourseApi>().ConfigureHttpClient(client =>
                 {
                     var api = configuration.GetValue<string>("BackendApi")!;
                     client.BaseAddress = new Uri($"{api}/api/v1/Courses/");
-                }
+                });
 
-                s.AddHttpClient<IndexCourse>(ConfigureClient);
-                s.AddHttpClient<ListCourses>(ConfigureClient);
-                s.AddHttpClient<DeleteCourse>(ConfigureClient);
-                s.AddHttpClient<GetCourse>(ConfigureClient);
-                s.AddHttpClient<Playlist>(ConfigureClient);
+                // void ConfigureClient(HttpClient client)
+                // {
+                //     var api = configuration.GetValue<string>("BackendApi")!;
+                //     client.BaseAddress = new Uri($"{api}/api/v1/Courses/");
+                // }
+
+                // s.AddHttpClient<IndexCourse>(ConfigureClient);
+                // s.AddHttpClient<ListCourses>(ConfigureClient);
+                // s.AddHttpClient<DeleteCourse>(ConfigureClient);
+                // s.AddHttpClient<GetCourse>(ConfigureClient);
+                // s.AddHttpClient<Playlist>(ConfigureClient);
             })
             .Build();
 

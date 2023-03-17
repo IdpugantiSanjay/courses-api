@@ -1,0 +1,6 @@
+[*.cs]
+csharp_prefer_braces = true:error
+dotnet_style_prefer_conditional_expression_over_assignment = false:error
+dotnet_style_prefer_conditional_expression_over_return = false:error
+dotnet_style_coalesce_expression = false:error
+csharp_style_expression_bodied_methods = false:error

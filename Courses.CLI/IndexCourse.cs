@@ -1,6 +1,4 @@
 using System.Diagnostics;
-using System.Text;
-using System.Text.Json;
 using CourseModule.Contracts;
 using FFMpegCore;
 using Microsoft.Extensions.Logging;
@@ -13,13 +11,13 @@ namespace Courses.CLI;
 
 internal class IndexCourse
 {
-    private readonly HttpClient _httpClient;
+    private readonly ICourseApi _api;
     private readonly ILogger<IndexCourse> _logger;
 
-    public IndexCourse(ILogger<IndexCourse> logger, HttpClient httpClient)
+    public IndexCourse(ILogger<IndexCourse> logger, ICourseApi api)
     {
         _logger = logger;
-        _httpClient = httpClient;
+        _api = api;
     }
 
     private static async Task<(TimeSpan, bool)> GetVideoProperties(string filePath)
@@ -83,30 +81,14 @@ internal class IndexCourse
         var body = new CreateRequestBody.Default
             { Name = path.Name, Duration = totalDuration, Categories = categories, IsHighDefinition = isCourseHd, Entries = entries.ToArray() };
 
-        var json = JsonSerializer.Serialize(body);
-        var content = new StringContent(json, Encoding.UTF8, "application/json");
-        var request = new HttpRequestMessage(HttpMethod.Post, "")
-        {
-            Content = content
-        };
-        request.Headers.Add("x-correlation-id", correlationId);
-
-        _logger.LogInformation("Sending Course contents to API: {@Body}", body);
-        var postAsyncTask = _httpClient.SendAsync(request);
-        HttpResponseMessage? httpResponseMessage = null;
+        var createTask = _api.Create(body, correlationId);
+        var createdId = 0;
 
         _logger.LogInformation("Making API request to insert {CourseName}", body.Name);
 
         await AnsiConsole.Status()
-            .StartAsync("Inserting...", async _ => { httpResponseMessage = await postAsyncTask; });
-
-        Debug.Assert(httpResponseMessage != null, nameof(httpResponseMessage) + " != null");
-
-        if (!httpResponseMessage.IsSuccessStatusCode)
-            _logger.LogError("Error indexing course, Response: {ErrorResponse}",
-                await httpResponseMessage.Content.ReadAsStringAsync());
-
-        httpResponseMessage.EnsureSuccessStatusCode();
+            .StartAsync("Inserting...", async _ => { createdId = await createTask; });
+        Debug.Assert(createdId != default, nameof(createdId) + " != 0");
         _logger.LogInformation("Added {CourseName} into Database", body.Name);
     }
 

@@ -1,6 +1,4 @@
 using System.Diagnostics;
-using System.Text;
-using System.Text.Json;
 using System.Xml;
 using CourseModule.Contracts;
 using Google.Apis.Auth.OAuth2;
@@ -32,16 +30,16 @@ internal class HttpInterceptor : IHttpExecuteInterceptor
 
 internal class Playlist
 {
-    private readonly HttpClient _httpClient;
+    private readonly ICourseApi _api;
     private readonly HttpInterceptor _interceptor;
 
     private readonly ILogger<Playlist> _logger;
 
-    public Playlist(ILogger<Playlist> logger, HttpClient httpClient, HttpInterceptor interceptor)
+    public Playlist(ILogger<Playlist> logger, HttpInterceptor interceptor, ICourseApi api)
     {
         _logger = logger;
-        _httpClient = httpClient;
         _interceptor = interceptor;
+        _api = api;
     }
 
     public async Task Index(string playlistId, CancellationToken cancellationToken)
@@ -138,28 +136,17 @@ internal class Playlist
             Entries = entries.ToArray(),
             IsHighDefinition = isCourseHd
         };
-        var json = JsonSerializer.Serialize(body);
-        var content = new StringContent(json, Encoding.UTF8, "application/json");
-        var httpRequest = new HttpRequestMessage(HttpMethod.Post, "")
-        {
-            Content = content
-        };
-        httpRequest.Headers.Add("x-correlation-id", correlationId);
+
+        var postAsyncTask = _api.Create(body, correlationId);
+        var createdId = 0;
 
         _logger.LogInformation("Sending Playlist contents to API: {@Body}", body);
-        var postAsyncTask = _httpClient.SendAsync(httpRequest, cancellationToken);
-        HttpResponseMessage? httpResponseMessage = null;
 
         await AnsiConsole.Status()
-            .StartAsync("Inserting...", async _ => { httpResponseMessage = await postAsyncTask; });
+            .StartAsync("Inserting...", async _ => { createdId = await postAsyncTask; });
 
-        Debug.Assert(httpResponseMessage != null, nameof(httpResponseMessage) + " != null");
+        Debug.Assert(createdId != 0, nameof(createdId) + " != 0");
 
-        if (!httpResponseMessage.IsSuccessStatusCode)
-            _logger.LogError("Error indexing course, Response: {ErrorResponse}",
-                await httpResponseMessage.Content.ReadAsStringAsync(cancellationToken));
-
-        httpResponseMessage.EnsureSuccessStatusCode();
         _logger.LogDebug("Added {CourseName} into Database", body.Name);
     }
 }
